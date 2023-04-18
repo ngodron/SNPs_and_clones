@@ -2,8 +2,13 @@
 # generate_GO()
 ## ---------------------------
 
-#
-#
+# INPUT:
+#   n_snps,
+#   n_indiv,
+#   p, vector of probability
+
+# OUTPUT: 
+#   out_gen0, 0/1 matrix with indiv
 #
 
 generate_G0 <- function(n_snps, n_indiv, p) {
