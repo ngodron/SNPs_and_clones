@@ -1,5 +1,5 @@
 ## ---------------------------
-# generate_GO()
+#   generate_GO()
 ## ---------------------------
 
 # INPUT:
@@ -24,9 +24,12 @@ generate_G0 <- function(n_snps, n_indiv, p) {
   } 
   out_gen0 <- 
     t(replicate(n = n_indiv, expr = rbinom(n = n_snps, size = 1, prob = p)))
-  which(rowSums(out_gen0) == 0)
+  
+  # each genome should include 1 snp at least
   for (i in 1:nrow(out_gen0)) {
-    out_gen0[i, sample(x = 1:ncol(out_gen0), size = 1)] <- 1  
+    if(sum(out_gen0[i,] == 0)) {
+      out_gen0[i, sample(x = 1:ncol(out_gen0), size = 1)] <- 1
+    }
   }
   return(out_gen0)
 }

@@ -1,5 +1,5 @@
 ## ---------------------------
-# generate_GO()
+#   calc_score()
 ## ---------------------------
 
 # 
@@ -23,7 +23,7 @@ fish_fitness_mock <- function(snps, pheno) {
   for (i in 1:ncol(snps)) {
     
     curr_snp <- as.matrix(snps[ , i])
-    curr_p <- fisher.test(table(curr_snp, pheno))$p
+    curr_p <- fisher.test(table(curr_snp, pheno))$p.value
     out_score <- 
       out_score + (1- curr_p)
   }
