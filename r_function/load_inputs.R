@@ -27,7 +27,6 @@
 ### Without argparse ----
 arguments <- list()
 
-
 # Directory in which are the SNP and phenotype files.
 arguments$dir <- commandArgs(trailingOnly = TRUE)[1]
 
@@ -62,11 +61,22 @@ if (!is.na(arguments$dir)) {
 
 ## Inputs ----
 # Test
-print(arguments)
 
-SNP_matrix <- read.delim(file = arguments$snp)
-SNP_matrix <- as.matrix(SNP_matrix)
- 
-pheno_matrix <- read.delim(file = arguments$pheno)
-pheno_matrix <- pheno_matrix[arguments$pheno_index]
-pheno_matrix <- as.matrix(pheno_matrix)
+loading <- function(SNP_path, pheno_path, pheno_index) {
+  cat(SNP_path, "\n", pheno_path, "\n", pheno_index)
+  
+  SNP_matrix <- read.delim(file = SNP_path)
+  SNP_matrix <- as.matrix(SNP_matrix)
+  
+  pheno_matrix <- read.delim(file = pheno_path)
+  pheno_matrix <- pheno_matrix[pheno_index]
+  pheno_matrix <- as.matrix(pheno_matrix)
+  
+  return(SNP_matrix, pheno_matrix)
+}
+
+matrices <- loading(arguments$snp, arguments$pheno, arguments$pheno_index)
+
+
+
+

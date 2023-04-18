@@ -6,18 +6,25 @@
 
 # Scripts
 
-load_inputs.R --> Nicolas
+### load_inputs.R --> Nicolas
+Status: Prototype
 
-quality_control.R --> Nicolas
+### quality_control.R --> Nicolas
+Status: 
 
-generate_GO.R --> Antoine
+### generate_GO.R --> Antoine
+Status: Prototype 
 
-calc_score.R --> Antoine
+### calc_score.R --> Antoine
+Status:
 
-next_generation.R --> Nicolas
+### next_generation.R --> Nicolas
+Status:
 
-evolve.R --> Nicolas
+### evolve.R --> Nicolas
+Status:
 
-main.R --> Joint effort
+### gen_algo.R --> Joint effort
+Status:
 
 # Contributions
