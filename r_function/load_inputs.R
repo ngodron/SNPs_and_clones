@@ -12,19 +12,7 @@
 # Matrix of SNP absence/presence
 # (1D) Matrix of phenotype
 
-## Argparsing ----
-### With argparse ----
-# suppressPackageStartupMessages(library("argparse"))
-# parser <- ArgumentParser()
-# parser$add_argument("-d", "--dir", action = "store_true", default = FALSE,
-#                     help = "Directory to be set as working directory in R.")
-# parser$add_argument("-s", "--snp", action = "store_true", default = FALSE,
-#                     help = "Path to SNP presence/absence tab-separated file (absolute, or relative to --dir).")
-# parser$add_argument("-p", "--pheno", action = "store_true", default = FALSE,
-#                     help = "Path to phenotype tab-separated file (absolute, or relative to --dir).")
-# args <- parser$parse_args()
-
-### Without argparse ----
+## Parsing ----
 arguments <- list()
 
 # Directory in which are the SNP and phenotype files.
@@ -45,7 +33,7 @@ arguments$pheno_index <- commandArgs(trailingOnly = TRUE)[4]
 # arguments$pheno <- "database_613.csv"
 # arguments$pheno_index <- 3
 
-### 
+### Testing completeness of given arguments ----
 if (is.na(arguments$snp)) {
   stop("Path to SNP file was not provided (2nd trailing argument)")
 }
@@ -59,23 +47,23 @@ if (!is.na(arguments$dir)) {
   arguments$pheno <- paste0(arguments$dir, arguments$pheno)
 }
 
-## Inputs ----
-# Test
+## Input loading ----
 
-loading <- function(SNP_path, pheno_path, pheno_index) {
+input_loading <- function(SNP_path, pheno_path, pheno_index) {
   cat(SNP_path, "\n", pheno_path, "\n", pheno_index)
   
-  SNP_matrix <- read.delim(file = SNP_path)
+  SNP_matrix <- read.delim(file = SNP_path, row.names = 1)
   SNP_matrix <- as.matrix(SNP_matrix)
   
   pheno_matrix <- read.delim(file = pheno_path)
   pheno_matrix <- pheno_matrix[pheno_index]
   pheno_matrix <- as.matrix(pheno_matrix)
   
-  return(SNP_matrix, pheno_matrix)
+  output <- list(SNP_matrix, pheno_matrix)
+  return(output)
 }
 
-matrices <- loading(arguments$snp, arguments$pheno, arguments$pheno_index)
+matrices <- input_loading(arguments$snp, arguments$pheno, arguments$pheno_index)
 
 
 
