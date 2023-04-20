@@ -12,6 +12,7 @@
 #
 
 generate_G0 <- function(n_snps, n_indiv, p) {
+  # make p a matrix
   if (length(p) != n_snps) {
     if (length(p) > 1) {
       stop("Wrong number of elements in vector p:

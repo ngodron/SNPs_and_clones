@@ -10,13 +10,13 @@
 
 
 evolve <- function(genomes, mut_rate, conjug_rate) {
-  for (i in nrow(genomes)) {
-    genomes[i, ] <- mutate(genome = genomes[i, ], mu = mut_rate)
+  for (i in 1:nrow(genomes)) {
+    genomes[i, ] <- mutation(genome = genomes[i, ], mu = mut_rate)
   }
   return(genomes)
 }
 
-mutate <- function(genome, mu) {
+mutation <- function(genome, mu) {
   genome <- as.logical(genome)
   to_mutate <- 
     as.logical(rbinom(n = length(genome), size = 1, prob = mu))
@@ -24,4 +24,4 @@ mutate <- function(genome, mu) {
   return(genome)
 }
 
-conjugate <- function(genome, mu) {}
+crossing_over <- function(genome, mu) {}

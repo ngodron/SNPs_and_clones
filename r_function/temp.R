@@ -17,31 +17,60 @@ source('./r_function/calc_score.R')
 source('./r_function/cell_division.R')
 source('./r_function/evolve.R')
 
+n_iter <- 1e1
+n_ind <- 1e2
+n_eli <- 4
+n_chi <- 4
+n_be <- n_ind/n_chi - n_eli/n_chi
+
+all_gen <- vector('list', n_iter)
 
 curr_gen <- 
-  generate_G0(n_snps = 1e2, n_indiv = 1e1, p = 0.1)
-
-n_iter <- 1e3
+  generate_G0(n_snps = ncol(snp_df), 
+              n_indiv = n_ind, 
+              p = runif(n = ncol(snp_df), min = 0, max = 0.001))
+rowSums(curr_gen)
 
 score_list <- vector(mode = 'list', length = n_iter)
 
 for (i in 1:n_iter) {
-  print(i)
+  cat('Generation ', i - 1, '\n')
+  print(summary(rowSums(curr_gen)))
+  all_gen[[i]] <- curr_gen
   curr_scores <- 
     calc_score(genomes = curr_gen, 
                snps = snp_df, 
                phenotype = pheno, 
-               fitness = rand_fitness_mock)
+               fitness = glm_fitness_mock)
+  print(summary(curr_scores))
   score_list[[i]]<- c(curr_scores)
   
   next_gen <- 
     cell_division(genomes = curr_gen, 
                   scores = curr_scores, 
-                  n_best = 4, 
-                  n_child = 2, 
-                  n_elite = 2, mu = 1, cr = 0)
-  
+                  n_best = n_be, 
+                  n_child = n_chi, 
+                  n_elite = n_eli, mu = 0.001, cr = 0)
+  curr_gen <- next_gen
 }
 
-score_df <- do.call(rbind, score_list)
-plot(y = apply(X = score_df, MARGIN = 1, FUN = mean), x = 1:n_iter)
+
+score_df <- 
+  data.frame(gen = rep(1:n_iter, each = n_ind), 
+             score = unlist(score_list),
+             n_snps = unlist(sapply(all_gen, FUN = rowSums, simplify = FALSE)))
+
+
+require(tidyverse)
+
+score_df |> 
+  group_by(gen) |> 
+  mutate(gen_min = min(score)) |> 
+  identity() -> score_df
+
+ggplot(score_df) +
+  geom_smooth(aes(x = gen, y = score)) +
+  #geom_boxplot(aes(x = gen, y = score, group = gen)) +
+  geom_point(aes(x = gen, y = gen_min, group = gen)) +
+  theme_bw() +
+  geom_blank()
