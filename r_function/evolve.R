@@ -23,3 +23,5 @@ mutate <- function(genome, mu) {
   genome <- xor(to_mutate, genome)
   return(genome)
 }
+
+conjugate <- function(genome, mu) {}
