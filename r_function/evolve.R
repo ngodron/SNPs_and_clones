@@ -21,19 +21,22 @@ crossing_over <- function(genomes, cr) {
   # To do: Location of crossing over is picked in a Gaussian centered around |SNPs|/2
   genomes <- genomes[sample(1:nrow(genomes)), ]
   crossed <- genomes
-  for (i in 1:(nrow(genomes))/2) {
+  for (i in 1:(nrow(genomes)/2)) {
     # print("Before")
     # print(genomes[(2*i-1):(2*i),])
     if (rbinom(1, 1, cr)) {
      halfway <- floor(ncol(genomes)/2)
-     crossed[(2*i-1),] <- c(genomes[(2*i-1), 1:halfway],
-                                 genomes[(2*i), (halfway+1):ncol(genomes)])
-     crossed[(2*i),] <- c(genomes[(2*i), 1:halfway],
-                               genomes[(2*i-1), (halfway+1):ncol(genomes)])
-     
-   } else {
-     crossed[(2*i-1):(2*i), ] <- genomes[(2*i-1):(2*i), ]
-   }
+     gen_1 <- 2*i - 1
+     gen_2 <- 2*i
+     crossed_1 <- 
+       c(genomes[gen_1, 1:halfway], genomes[gen_2, (halfway+1):ncol(genomes)])
+     crossed_2 <- 
+       c(genomes[gen_2, 1:halfway], genomes[gen_1, (halfway+1):ncol(genomes)])
+     crossed[c(gen_1, gen_2), ] <- rbind(crossed_1, crossed_2)
+    } 
+   #  else {
+   #   crossed[(2*i-1):(2*i), ] <- genomes[(2*i-1):(2*i), ]
+   # }
     # print("After")
     # print(crossed[(2*i-1):(2*i),])
   }
@@ -44,6 +47,7 @@ evolve <- function(genomes, mut_rate, conjug_rate) {
   for (i in 1:nrow(genomes)) {
     genomes[i, ] <- mutation(genome = genomes[i, ], mu = mut_rate)
   }
-  genomes <- crossing_over(genomes <- genomes, cr = conjug_rate)
+  genomes <- 
+    crossing_over(genomes <- genomes, cr = conjug_rate)
   return(genomes)
 }

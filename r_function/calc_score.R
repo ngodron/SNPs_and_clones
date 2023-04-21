@@ -48,8 +48,8 @@ glm_fitness_mock <- function(snps, pheno) {
   accu <- (pred_TP + pred_TN) / (pred_TP + pred_TN + pred_FP + pred_FN)
   
   out_score <- 1 - accu
-  if (ncol(snps) > 20) out_score <- 1
-  out_score <- out_score + 2^(ncol(snps)/1000)
+  # if (ncol(snps) > 30) out_score <- 1
+  out_score <- out_score + (ncol(snps)/1000)
    
   # out_score <- ifelse(test = ncol(snps) > 15, yes =  out_score * ncol(snps), no = out_score)
   return(out_score)

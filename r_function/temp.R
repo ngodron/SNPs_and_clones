@@ -17,9 +17,9 @@ source('./r_function/calc_score.R')
 source('./r_function/cell_division.R')
 source('./r_function/evolve.R')
 
-n_iter <- 3e1
-n_ind <- 100
-n_eli <- 2
+n_iter <- 1e2
+n_ind <- 1e2
+n_eli <- 10
 n_chi <- 4
 n_be <- n_ind/n_chi - n_eli/n_chi
 n_be <- ceiling(n_be)
@@ -48,7 +48,7 @@ for (i in 1:n_iter) {
   print(summary(curr_scores))
   score_list[[i]]<- c(curr_scores)
   
-  # if (min(curr_scores) < 0.3) {
+  # if (min(curr_scores) < 0.0) {
   #   print('tadaaaa')
   #   all_gen <- all_gen[1:i]
   #   score_list <- score_list[1:i]
@@ -60,7 +60,7 @@ for (i in 1:n_iter) {
                   scores = curr_scores, 
                   n_best = n_be, 
                   n_child = n_chi, 
-                  n_elite = n_eli, mu = 0.0001, cr = 0)
+                  n_elite = n_eli, mu = 0.0001, cr = 0.3)
   curr_gen <- next_gen
 }
 })
@@ -82,7 +82,7 @@ score_df |>
 
 ggplot(score_df) +
   geom_smooth(aes(x = gen, y = score), level = 0.99) +
-  #geom_boxplot(aes(x = gen, y = score, group = gen)) +
+  # geom_boxplot(aes(x = gen, y = score, group = gen)) +
   geom_point(aes(x = gen, y = gen_min, group = gen, colour = n_snps_min), size = 5) +
   theme_bw() +
   geom_blank()
