@@ -2,7 +2,11 @@
 
 # Goal
 
+Implement a Genetic Algorithm to study SNP haplotypes.
+
 # Grand Master Plan
+
+
 
 # Scripts
 
@@ -10,21 +14,21 @@
 Status: Prototype
 
 ### quality_control.R --> Nicolas
-Status: 
+Status: WIP 
 
 ### generate_GO.R --> Antoine
 Status: Prototype 
 
 ### calc_score.R --> Antoine
-Status:
+Status: Prototype
 
 ### next_generation.R --> Nicolas
-Status:
+Status: Prototype, missing symmetric mutation & crossover
 
 ### evolve.R --> Nicolas
-Status:
+Status: Prototype
 
 ### gen_algo.R --> Joint effort
-Status:
+Status: Some elements in temp.R
 
 # Contributions
