@@ -22,7 +22,7 @@ source('./r_function/evolve.R')
 
 n_iter <- 1e1
 n_ind <- 1e2
-n_eli <- 10
+n_eli <- 20
 n_chi <- 4
 n_be <- n_ind/n_chi - n_eli/n_chi
 n_be <- ceiling(n_be)
@@ -33,7 +33,7 @@ all_gen <- vector('list', n_iter)
 curr_gen <- 
   generate_G0(n_snps = ncol(snp_df), 
               n_indiv = n_ind, 
-              p = runif(n = ncol(snp_df), min = 0, max = 0.001))
+              p = runif(n = ncol(snp_df), min = 0, max = 0.0001))
 rowSums(curr_gen)
 
 score_list <- vector(mode = 'list', length = n_iter)
@@ -63,7 +63,7 @@ for (i in 1:n_iter) {
                   scores = curr_scores, 
                   n_best = n_be, 
                   n_child = n_chi, 
-                  n_elite = n_eli, mu = 0.001, cr = 0.8)
+                  n_elite = n_eli, mu = 0.0001, cr = 0.8)
   curr_gen <- next_gen
 }
 })
@@ -75,17 +75,21 @@ score_df <-
 
 
 require(tidyverse)
-
+conf_int <- 0.05
 score_df |> 
   group_by(gen) |> 
-  mutate(gen_min = min(score)) |>
+  mutate(gen_min = min(score, na.rm = TRUE)) |>
   mutate(is_min = score == gen_min) |>
-  mutate(n_snps_min = n_snps[score == gen_min][1]) |> 
+  mutate(n_snps_min = n_snps[score == gen_min][1]) |>
+  mutate(conf_low = quantile(score, probs = conf_int)) |> 
+  mutate(conf_high = quantile(score, probs = 1-conf_int)) |> 
   identity() -> score_df
 
 ggplot(score_df) +
+  geom_ribbon(aes(x = gen, ymin = conf_low, ymax = conf_high), alpha = 0.05) +
   geom_smooth(aes(x = gen, y = score), level = 0.99) +
   # geom_boxplot(aes(x = gen, y = score, group = gen)) +
-  geom_point(aes(x = gen, y = gen_min, group = gen, colour = n_snps_min), size = 5) +
+  geom_point(aes(x = gen, y = gen_min, group = gen, colour = n_snps_min), size = 1, shape = 3) +
+  
   theme_bw() +
   geom_blank()

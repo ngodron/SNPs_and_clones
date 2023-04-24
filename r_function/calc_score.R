@@ -47,10 +47,20 @@ glm_fitness_mock <- function(snps, pheno) {
   
   accu <- (pred_TP + pred_TN) / (pred_TP + pred_TN + pred_FP + pred_FN)
   
+  num_mcc <- pred_TN * pred_TP - pred_FN * pred_FP
+  den_mcc <- 
+    sqrt((pred_TP + pred_FP) * 
+           (pred_TP + pred_FN) * 
+           (pred_TN + pred_FP) * 
+           (pred_TN + pred_FN))
+  
+  mcc <- num_mcc / den_mcc
   out_score <- 1 - accu
+  # out_score <- 1 - mcc
   # if (ncol(snps) > 30) out_score <- 1
+  
   out_score <- out_score + (ncol(snps)/1000)
-   
+  # if(ncol(snps) > 20) out_score <- 1
   # out_score <- ifelse(test = ncol(snps) > 15, yes =  out_score * ncol(snps), no = out_score)
   return(out_score)
 }
