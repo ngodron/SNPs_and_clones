@@ -1,4 +1,7 @@
 base_dir <- '../../THESE_KLA/'
+# base_dir <- '~/Kevin_These/'
+# setwd("/home/nicolas/2023/SNPs_and_clones")
+
 
 snp_df <- 
   read.delim(file = paste0(base_dir,'Current_File/230331_matrix_snp_gene_613.csv'))
@@ -17,7 +20,7 @@ source('./r_function/calc_score.R')
 source('./r_function/cell_division.R')
 source('./r_function/evolve.R')
 
-n_iter <- 1e2
+n_iter <- 1e1
 n_ind <- 1e2
 n_eli <- 10
 n_chi <- 4
@@ -60,7 +63,7 @@ for (i in 1:n_iter) {
                   scores = curr_scores, 
                   n_best = n_be, 
                   n_child = n_chi, 
-                  n_elite = n_eli, mu = 0.0001, cr = 0.3)
+                  n_elite = n_eli, mu = 0.001, cr = 0.8)
   curr_gen <- next_gen
 }
 })

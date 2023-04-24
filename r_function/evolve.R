@@ -16,6 +16,34 @@ mutation <- function(genome, mu) {
   return(genome)
 }
 
+mutation_balanced <- function(genome, mu, mut_max = 5, min_mut = 1) {
+  # Mutation function to have balanced 0->1 and 1->0 mutations between generations,
+  # but with diversity in mutation rates and gain/loss balance at the scale of a genome.
+  # This function is implemented to avoid the overall inflation of SNPs used.
+  
+  # print(genome) # Debugging
+  # Binomial sampling of count of mutation events for each genome:
+  # min_mut is the minimum count of mutations acquired by a genome.
+  mut_count <- max(sum(rbinom(mut_max, 1, 0.5)), min_mut)
+    
+  # Gain/Loss mutations counts allocation (from mut_count):
+  gain_count <- sum(rbinom(mut_count, 1, 0.5))
+  loss_count <- mut_count - gain_count
+  # print(c(gain_count, loss_count)) # Debugging
+  # print(c(sum(genome == 0)-1, sum(genome == 1)-1)) # Debugging
+    
+  # Making Gain and Loss mutations:
+  zero_bits_to_swap <- sample(which(genome == 0), min(gain_count, sum(genome == 0)-1))
+  one_bits_to_swap <- sample(which(genome == 1), min(loss_count, sum(genome == 1)-1))
+  # print(c(zero_bits_to_swap, one_bits_to_swap)) # Debugging
+  genome[c(zero_bits_to_swap, one_bits_to_swap)] <- 
+    ! genome[c(zero_bits_to_swap, one_bits_to_swap)]
+  
+  # hist(mut_count, breaks = unique(mut_count))
+  # counts <- data.frame(mut_count, gain_count, loss_count)
+  return(genome)
+}
+
 crossing_over <- function(genomes, cr) {
   # Randomised order pairwise single crossing over.
   # To do: Location of crossing over is picked in a Gaussian centered around |SNPs|/2
@@ -43,10 +71,19 @@ crossing_over <- function(genomes, cr) {
   return(crossed)
 }
 
-evolve <- function(genomes, mut_rate, conjug_rate) {
+evolve <- function(genomes, mut_rate, conjug_rate, min_mut) {
+  maximum_mutations <- round((ncol(genomes) * mut_rate * 2))
   for (i in 1:nrow(genomes)) {
-    genomes[i, ] <- mutation(genome = genomes[i, ], mu = mut_rate)
+    genomes[i, ] <- mutation_balanced(genome = genomes[i, ],
+                                      mu = mut_rate,
+                                      mut_max = maximum_mutations,
+                                      min_mut = 1)
   }
+  
+  # for (i in 1:nrow(genomes)) {
+  #   genomes[i, ] <- mutation(genome = genomes[i, ], mu = mut_rate)
+  # }
+  
   genomes <- 
     crossing_over(genomes <- genomes, cr = conjug_rate)
   return(genomes)
