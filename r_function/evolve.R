@@ -2,11 +2,14 @@
 #   evolve()
 ## ---------------------------
 
-# 
 # INPUT:
-#   genomes = 0/1 matrix with indiv in rows and snps in cols
-#   snps = 0/1 matrix with indiv in rows and snps in cols
-#   pheno = 0/1 vector of length = nrow(snps)
+#   genomes of gen i: 0/1 matrix with individuals in rows and SNPs in cols
+#   mut_rate: between 0 and 1, probability of swapping each feature's (SNP) bit.
+#   conjug_rate: between 0 and 1, probability for each pair of genomes to be crossed over.
+#   min_mut: minimum count of mutations to be realised. (To implement)
+
+# OUTPUT:
+#   genomes of gen i+1, after mutation and crossing-over.
 
 mutation <- function(genome, mu) {
   genome <- as.logical(genome)
@@ -16,40 +19,20 @@ mutation <- function(genome, mu) {
   return(genome)
 }
 
-mutation_balanced_ <- function(genome, mu, mut_max = 5, min_mut = 1) {
+mutation_balanced <- function(genome, mu, max_tot) {
   # Mutation function to have balanced 0->1 and 1->0 mutations between generations,
   # but with diversity in mutation rates and gain/loss balance at the scale of a genome.
-  # This function is implemented to avoid the overall inflation of SNPs used.
+  # This function avoids the overall inflation of features used by max_tot threshold.
+  # NB: max_tot can be surpassed after crossing-over is realised.
   
-  # print(genome) # Debugging
-  # Binomial sampling of count of mutation events for each genome:
-  # min_mut is the minimum count of mutations acquired by a genome.
-  mut_count <- max(sum(rbinom(mut_max, 1, 0.5)), min_mut)
-    
-  # Gain/Loss mutations counts allocation (from mut_count):
-  gain_count <- sum(rbinom(mut_count, 1, 0.5))
-  loss_count <- mut_count - gain_count
-  # print(c(gain_count, loss_count)) # Debugging
-  # print(c(sum(genome == 0)-1, sum(genome == 1)-1)) # Debugging
-    
-  # Making Gain and Loss mutations:
-  zero_bits_to_swap <- sample(which(genome == 0), min(gain_count, sum(genome == 0)-1))
-  one_bits_to_swap <- sample(which(genome == 1), min(loss_count, sum(genome == 1)-1))
-  # print(c(zero_bits_to_swap, one_bits_to_swap)) # Debugging
-  genome[c(zero_bits_to_swap, one_bits_to_swap)] <- 
-    ! genome[c(zero_bits_to_swap, one_bits_to_swap)]
-  
-  # hist(mut_count, breaks = unique(mut_count))
-  # counts <- data.frame(mut_count, gain_count, loss_count)
-  return(genome)
-}
-
-mutation_balanced <- function(genome, mu, max_tot) {
   genome_length <- length(genome)
-  n_set_mut <- sum(genome)
-  n_unset_mut <- genome_length - n_set_mut
+  n_set_mut <- sum(genome) # Count of features used
+  n_unset_mut <- genome_length - n_set_mut # Count of features NOT used
   
+  # Binomial sampling of count of mutation events for each genome:
   n_mut <- rbinom(n = 1, size = genome_length, prob = mu)
+  
+  # Gain/Loss mutations counts allocation (at random from n_mut):
   mut_gain <- rbinom(n = 1, size = n_mut, prob = 0.5)
   mut_loss <- n_mut - mut_gain
   mut_gain <- min(mut_gain, n_unset_mut)
@@ -66,6 +49,7 @@ mutation_balanced <- function(genome, mu, max_tot) {
     mut_gain <- 0
   }
   
+  # Making Gain and Loss mutations:
   to_mutate <- c(sample(x = which(genome == 0), size = mut_gain, replace = FALSE),
   sample(x = which(genome == 1), size = mut_loss, replace = FALSE))
   genome[to_mutate] <- ! genome[to_mutate]
@@ -90,14 +74,10 @@ crossing_over <- function(genomes, cr) {
          c(genomes[gen_2, 1:halfway], genomes[gen_1, (halfway+1):ncol(genomes)])
     if (rbinom(n = 1, size = 1, prob = cr / 100)) { # rare inversion event
       crossed[c(gen_1, gen_2), ] <- rbind(crossed_2, crossed_1)
-    }
+    } else {
       crossed[c(gen_1, gen_2), ] <- rbind(crossed_1, crossed_2)
+    }
     } 
-   #  else {
-   #   crossed[(2*i-1):(2*i), ] <- genomes[(2*i-1):(2*i), ]
-   # }
-    # print("After")
-    # print(crossed[(2*i-1):(2*i),])
   }
   return(crossed)
 }
