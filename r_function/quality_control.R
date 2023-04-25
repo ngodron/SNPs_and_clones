@@ -2,11 +2,11 @@
 # Loads SNP presence/absence matrix and phenotypic data
 # nicolas.godron@gmail.com
 
-# INPUT:
-# Matrix of SNP absence/presence
-# (1D) Matrix of phenotype
-# List of phenotype values
-# Minor Allele Frequency parameter
+# INPUT: (NB: SNPs, pheno and covariates must contain the same number of individuals.)
+# SNPs: Matrix of SNP absence/presence
+# pheno: (1D) Matrix of phenotype
+# MAF: Minor Allele Frequency filter parameter
+# covariates: Covariates matrix
 
 # OUPUT:
 # Matrix of SNP absence/presence (QC-passed)
@@ -51,7 +51,7 @@ MAF_filter <- function(snp_matrix, minimum_allele_frequency) {
   # To Do!
 }
 
-QC <- function(SNPS, pheno, pheno_values, MAF) {
+QC <- function(SNPS, pheno, MAF, covariates) {
   test_size(snp_matrix = SNPs, phenotypes = pheno) # OK
   
   NA_free <- remove_NA(snp_matrix = SNPs, phenotypes = pheno) # OK for SNPs

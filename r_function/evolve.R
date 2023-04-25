@@ -90,10 +90,6 @@ evolve <- function(genomes, mut_rate, conjug_rate, min_mut) {
                                       max_tot = 20)
   }
   
-  # for (i in 1:nrow(genomes)) {
-  #   genomes[i, ] <- mutation(genome = genomes[i, ], mu = mut_rate)
-  # }
-  
   genomes <- 
     crossing_over(genomes <- genomes, cr = conjug_rate)
   return(genomes)
