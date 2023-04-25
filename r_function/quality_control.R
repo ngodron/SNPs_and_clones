@@ -12,14 +12,14 @@
 # Matrix of SNP absence/presence (QC-passed)
 # (1D) Matrix of phenotype (QC-passed)
 
-test_size <- function(snp_matrix, phenotypes) {
+test_size <- function(snp_matrix, phenotypes) { # add COVAR
   if (nrow(snp_matrix) != length(phenotypes)) {
     stop("Number of rows of the SNP matrix does not correspond to length of phenotypes.")
   }
   print("QC: SNP matrix and phenotypes have corresponding sizes.")
 }
 
-remove_NA <- function(snp_matrix, phenotypes, phenotype_values) {
+remove_NA <- function(snp_matrix, phenotypes) {
   # This function:
   #     1. Gets rid of SNPs with NAs in their columns in snp_matrix
   #         and outputs names of individuals for which at least 1 SNP is missing
@@ -39,9 +39,11 @@ remove_NA <- function(snp_matrix, phenotypes, phenotype_values) {
     print(paste(n_removed, "SNPs were removed"))
   }
   
-  # To Do: QC of phenotypes here!
-  
+  ## To Do: QC of phenotypes here!
+  # check unique(pheno) == 2 for pheno is binary
+
   out_NA <- list(snp_matrix, phenotypes)
+
   return(out_NA)
 }
 
@@ -53,12 +55,12 @@ QC <- function(SNPS, pheno, pheno_values, MAF) {
   test_size(snp_matrix = SNPs, phenotypes = pheno) # OK
   
   NA_free <- remove_NA(snp_matrix = SNPs, phenotypes = pheno) # OK for SNPs
-  SNPs <- NA_free[1]
-  pheno <- NA_free[2]
+  SNPs <- NA_free[[1]]
+  pheno <- NA_free[[2]]
   
   MAF_OK <- MAF_filter(SNPs, MAF) # Filter SNPs with frequency lower than MAF
   SNPs <- MAF_OK
-  
-  return(NA_free)
+  QC_out <- NULL
+  return(QC_out)
 }
 

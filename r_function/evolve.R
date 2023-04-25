@@ -16,7 +16,7 @@ mutation <- function(genome, mu) {
   return(genome)
 }
 
-mutation_balanced <- function(genome, mu, mut_max = 5, min_mut = 1) {
+mutation_balanced_ <- function(genome, mu, mut_max = 5, min_mut = 1) {
   # Mutation function to have balanced 0->1 and 1->0 mutations between generations,
   # but with diversity in mutation rates and gain/loss balance at the scale of a genome.
   # This function is implemented to avoid the overall inflation of SNPs used.
@@ -44,6 +44,34 @@ mutation_balanced <- function(genome, mu, mut_max = 5, min_mut = 1) {
   return(genome)
 }
 
+mutation_balanced <- function(genome, mu, max_tot) {
+  genome_length <- length(genome)
+  n_set_mut <- sum(genome)
+  n_unset_mut <- genome_length - n_set_mut
+  
+  n_mut <- rbinom(n = 1, size = genome_length, prob = mu)
+  mut_gain <- rbinom(n = 1, size = n_mut, prob = 0.5)
+  mut_loss <- n_mut - mut_gain
+  mut_gain <- min(mut_gain, n_unset_mut)
+  mut_loss <- min(mut_loss, n_set_mut)
+  
+  total_mut <- n_set_mut + mut_gain - mut_loss 
+  # cat('n_mut: ', n_mut)
+  # cat('\t\ttotal_mut: ', total_mut,'\n')
+  # cat('mut gain \t', mut_gain, '\t\tmut_loss\t', mut_loss, '\n')
+  
+  if (total_mut > max_tot) {
+    mut_loss <- mut_loss + mut_gain
+    mut_loss <- min(mut_loss, n_set_mut)
+    mut_gain <- 0
+  }
+  
+  to_mutate <- c(sample(x = which(genome == 0), size = mut_gain, replace = FALSE),
+  sample(x = which(genome == 1), size = mut_loss, replace = FALSE))
+  genome[to_mutate] <- ! genome[to_mutate]
+  return(genome)
+}
+
 crossing_over <- function(genomes, cr) {
   # Randomised order pairwise single crossing over.
   # To do: Location of crossing over is picked in a Gaussian centered around |SNPs|/2
@@ -53,14 +81,17 @@ crossing_over <- function(genomes, cr) {
     # print("Before")
     # print(genomes[(2*i-1):(2*i),])
     if (rbinom(1, 1, cr)) {
-     halfway <- floor(ncol(genomes)/2)
-     gen_1 <- 2*i - 1
-     gen_2 <- 2*i
-     crossed_1 <- 
-       c(genomes[gen_1, 1:halfway], genomes[gen_2, (halfway+1):ncol(genomes)])
-     crossed_2 <- 
-       c(genomes[gen_2, 1:halfway], genomes[gen_1, (halfway+1):ncol(genomes)])
-     crossed[c(gen_1, gen_2), ] <- rbind(crossed_1, crossed_2)
+      halfway <- floor(ncol(genomes)/2)
+      gen_1 <- 2*i - 1
+      gen_2 <- 2*i
+      crossed_1 <- 
+         c(genomes[gen_1, 1:halfway], genomes[gen_2, (halfway+1):ncol(genomes)])
+      crossed_2 <- 
+         c(genomes[gen_2, 1:halfway], genomes[gen_1, (halfway+1):ncol(genomes)])
+    if (rbinom(n = 1, size = 1, prob = cr / 100)) { # rare inversion event
+      crossed[c(gen_1, gen_2), ] <- rbind(crossed_2, crossed_1)
+    }
+      crossed[c(gen_1, gen_2), ] <- rbind(crossed_1, crossed_2)
     } 
    #  else {
    #   crossed[(2*i-1):(2*i), ] <- genomes[(2*i-1):(2*i), ]
@@ -76,8 +107,7 @@ evolve <- function(genomes, mut_rate, conjug_rate, min_mut) {
   for (i in 1:nrow(genomes)) {
     genomes[i, ] <- mutation_balanced(genome = genomes[i, ],
                                       mu = mut_rate,
-                                      mut_max = maximum_mutations,
-                                      min_mut = 1)
+                                      max_tot = 20)
   }
   
   # for (i in 1:nrow(genomes)) {
