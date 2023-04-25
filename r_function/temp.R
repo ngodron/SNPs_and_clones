@@ -16,6 +16,17 @@ pheno <-
 pheno <- pheno$Disease != 'sputum'
 strain_names <- snp_df[,1]
 snp_df <- snp_df[,-1]
+
+all_lin <- sort(unique(metadata$Lineage))
+n_lin <- length(all_lin)
+covar <- matrix(nrow = nrow(metadata), ncol = n_lin)
+colnames(covar) <- all_lin
+for (i in 1:n_lin) {
+  curr_lin <- all_lin[i]
+  covar[,i] <- metadata$Lineage == curr_lin
+}
+
+
 source('./r_function/generate_GO.R')
 source('./r_function/calc_score.R')
 source('./r_function/cell_division.R')
@@ -29,7 +40,7 @@ genomes_diversity <- function(genomes) {
   return(out)
 }
 
-n_iter <- 1e3
+n_iter <- 1e2
 n_ind <- 1e2
 n_eli <- ceiling(n_ind / 50)
 n_chi <- 5
@@ -49,6 +60,7 @@ curr_gen <-
 rowSums(curr_gen)
 
 score_list <- vector(mode = 'list', length = n_iter)
+model_list <- vector(mode = 'list', length = n_iter)
 diversity <- rep(NA_real_, n_iter)
 
 library(doParallel)
@@ -68,11 +80,19 @@ for (i in 1:n_iter) {
   all_gen[[i]] <- snp_list
   print(summary(sapply(all_gen[[i]], length)))
   
-  curr_scores <- 
+  curr_scores_models <- 
     calc_score(genomes = curr_gen, 
                snps = snp_df, 
                phenotype = pheno, 
-               fitness = glm_fitness_mock)
+               fitness = glm_fitness_mock, 
+               covars = covar)
+  
+  i_scores <- 1:n_ind*2 - 1
+  curr_scores <- unlist(curr_scores_models[i_scores])
+  curr_models <- (curr_scores_models[i_scores + 1])
+  
+  model_list[[i]] <-
+    curr_models[[which(curr_scores == min(curr_scores))[1]]] 
   
   print(summary(curr_scores))
   score_list[[i]]<- c(curr_scores)
@@ -116,7 +136,7 @@ score_df |>
   ungroup() |> 
   filter(gen >= 0) |> 
   # slice_sample(prop = 0.01) |>
-  filter(gen %% 1 == 0 | gen < 10) |> 
+  filter(gen %% 10 == 0 | gen < 10) |> 
   identity() -> score_df
 
 ggplot(score_df, mapping = aes(x = gen, y = diversity, colour = gen_min)) +
@@ -139,6 +159,7 @@ ggplot(score_df) +
   geom_smooth(aes(x = gen, y = score), level = 0.99) +
   geom_point(aes(x = gen, y = gen_min, group = gen, colour = n_snps_min), size = 1, shape = 3) +
   geom_text(aes(x = legend_pos[1], y = legend_pos[2]), label = params) +
+  scale_colour_viridis_c() +
   theme_bw() +
   geom_blank()
 
