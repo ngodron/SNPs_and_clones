@@ -40,10 +40,10 @@ genomes_diversity <- function(genomes) {
   return(out)
 }
 
-n_iter <- 1e2
-n_ind <- 1e2
+n_iter <- 5e2
+n_ind <- 5e2
 n_eli <- ceiling(n_ind / 50)
-n_chi <- 5
+n_chi <- 3
 n_be <- n_ind/n_chi - n_eli/n_chi
 n_be <- ceiling(n_be)
 n_ind <- n_be * n_chi + n_eli
@@ -64,12 +64,16 @@ model_list <- vector(mode = 'list', length = n_iter)
 diversity <- rep(NA_real_, n_iter)
 
 library(doParallel)
-doParallel::registerDoParallel(cores = 48)
+# doParallel::registerDoParallel(cores = 48)
+# doParallel::registerDoParallel(cores = 1)
 
-system.time({
+# library("profmem")
+# memory_usage <- profmem({
+# system.time({
 # profvis({
+
 for (i in 1:n_iter) {
-  cat('Generation ', i - 1, '\n')
+  cat('Generation ', i - 1, '/', n_iter - 1 , '\n')
   set_snps <- which(curr_gen == 1, arr.ind = TRUE)
   set_snps <- set_snps[order(set_snps[,1]), ]
   snp_list <- vector(mode = 'list', length = n_ind)
@@ -84,7 +88,7 @@ for (i in 1:n_iter) {
     calc_score(genomes = curr_gen, 
                snps = snp_df, 
                phenotype = pheno, 
-               fitness = glm_fitness_mock, 
+               fitness = decision_tree_fitness, 
                covars = covar)
   
   i_scores <- 1:n_ind*2 - 1
@@ -110,10 +114,12 @@ for (i in 1:n_iter) {
                   scores = curr_scores, 
                   n_best = n_be, 
                   n_child = n_chi, 
-                  n_elite = n_eli, mu = mutation_rate, cr = 0.5)
+                  n_elite = n_eli, mu = mutation_rate, cr = 0.8)
   curr_gen <- next_gen
 }
-})
+# })
+
+# Rprofmem(NULL)
 
 score_df <- 
   data.frame(gen = rep(1:length(score_list), each = n_ind), 
@@ -136,7 +142,7 @@ score_df |>
   ungroup() |> 
   filter(gen >= 0) |> 
   # slice_sample(prop = 0.01) |>
-  filter(gen %% 10 == 0 | gen < 10) |> 
+  # filter(gen %% 10 == 0 | gen < 10) |> 
   identity() -> score_df
 
 ggplot(score_df, mapping = aes(x = gen, y = diversity, colour = gen_min)) +
