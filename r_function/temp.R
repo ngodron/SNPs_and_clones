@@ -40,10 +40,10 @@ genomes_diversity <- function(genomes) {
   return(out)
 }
 
-n_iter <- 5e2
-n_ind <- 5e2
+n_iter <- 1e2
+n_ind <- 1e2
 n_eli <- ceiling(n_ind / 50)
-n_chi <- 3
+n_chi <- 5
 n_be <- n_ind/n_chi - n_eli/n_chi
 n_be <- ceiling(n_be)
 n_ind <- n_be * n_chi + n_eli
@@ -69,11 +69,11 @@ library(doParallel)
 
 # library("profmem")
 # memory_usage <- profmem({
-# system.time({
+system.time({
 # profvis({
 
 for (i in 1:n_iter) {
-  cat('Generation ', i - 1, '/', n_iter - 1 , '\n')
+  cat('Generation ', i, '/', n_iter, '\n')
   set_snps <- which(curr_gen == 1, arr.ind = TRUE)
   set_snps <- set_snps[order(set_snps[,1]), ]
   snp_list <- vector(mode = 'list', length = n_ind)
@@ -85,16 +85,16 @@ for (i in 1:n_iter) {
   print(summary(sapply(all_gen[[i]], length)))
   
   curr_scores_models <- 
-    calc_score(genomes = curr_gen, 
+    calc_score_nopar(genomes = curr_gen, 
                snps = snp_df, 
                phenotype = pheno, 
                fitness = decision_tree_fitness, 
                covars = covar)
   
-  i_scores <- 1:n_ind*2 - 1
-  curr_scores <- unlist(curr_scores_models[i_scores])
-  curr_models <- (curr_scores_models[i_scores + 1])
-  
+  curr_scores <- 
+    unlist(lapply(curr_scores_models, function(x) x[[1]]))
+  curr_models <- 
+    (lapply(curr_scores_models, function(x) x[[2]]))
   model_list[[i]] <-
     curr_models[[which(curr_scores == min(curr_scores))[1]]] 
   
@@ -117,7 +117,7 @@ for (i in 1:n_iter) {
                   n_elite = n_eli, mu = mutation_rate, cr = 0.8)
   curr_gen <- next_gen
 }
-# })
+})
 
 # Rprofmem(NULL)
 
