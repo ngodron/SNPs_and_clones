@@ -9,9 +9,7 @@
 #   pheno = 0/1 vector of length = nrow(snps)
 
 calc_score_nopar <- function(genomes, snps, phenotype, fitness, covars) {
-  # all_scores <- rep(NA_real_, list()), nrow(genomes))
   all_scores <- vector(mode = 'list', length = nrow(genomes))
-  
   for (i in 1:nrow(genomes)) {
     curr_genome <- which(genomes[i, ] == 1)
     # drop = F allows to keep single SNP genomes as matrix
@@ -78,12 +76,15 @@ decision_tree_fitness <- function(snps, pheno, genome_size, covariables) {
   if (ncol(snps) == 0) return(list(1, NA)) # NA for the model
   
   df <- data.frame(pheno, snps, covariables)
-  df <- as.data.frame(apply(X = df, MARGIN = 2, FUN = as.logical, simplify = TRUE))
-  
+  #df <- as.data.frame(apply(X = df, MARGIN = 2, FUN = as.logical, simplify = TRUE))
+  formu <- formula(pheno ~ .)
   model <- 
-    rpart::rpart(formula = pheno ~ ., data = df, method = 'class')
+    rpart::rpart(formula = formu, 
+                 data = df, 
+                 minbucket = 10, 
+                 method = 'class')
   predicted <- predict(object = model)
-  predictions <- ifelse(test = predicted >= 0.5, yes = TRUE, no = FALSE)
+  predictions <- predicted[ , 1] <= 0.5 # predicted[ ,1] is smallest alphanum value
   # predictions <- predicted
   pred_TP <- sum(pheno & predictions)
   pred_TN <- sum(! pheno & ! predictions)
@@ -93,7 +94,7 @@ decision_tree_fitness <- function(snps, pheno, genome_size, covariables) {
   accu <- (pred_TP + pred_TN) / (pred_TP + pred_TN + pred_FP + pred_FN)
   
   out_score <- 1 - accu
-  
+  rm(formu)
   return(list(out_score, model))
 }
 
