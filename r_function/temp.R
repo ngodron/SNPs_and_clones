@@ -43,7 +43,7 @@ genomes_diversity <- function(genomes) {
 }
 
 # General parameters
-n_iter <- 1e2 # Number of generations
+n_iter <- 1e3 # Number of generations
 n_ind <- 1e2 # Number of individuals
 
 # Population parameters
@@ -80,7 +80,7 @@ diversity <- rep(NA_real_, n_iter)
 # library("profmem")
 # memory_usage <- profmem({
 # system.time({
-profvis({
+# profvis({
   
   for (i in 1:n_iter) {
     cat('Generation ', i, '/', n_iter, '\n')
@@ -131,7 +131,7 @@ profvis({
     rm(list = ls()[grep(pattern = 'curr_.*', x = ls())])
     curr_gen <- next_gen
   }
-})
+# })
 
 # Rprofmem(NULL)
 
@@ -157,14 +157,14 @@ score_df |>
   filter(gen >= 0) |> 
   identity() -> score_df
 
-if (n_iter > 200){
+if (n_iter > 200) {
   score_df |> 
     filter(gen %% (n_iter/100) == 0 | gen < 100) |>
     identity() -> score_df
 }
 
-ggplot(score_df, mapping = aes(x = gen, y = diversity, colour = gen_min)) +
-  geom_point() +
+ggplot(score_df, mapping = aes(x = gen, y = diversity)) +
+  geom_point(aes(x = gen, y = diversity, colour = gen_min)) +
   geom_smooth() +
   theme_bw()
 
@@ -186,5 +186,3 @@ ggplot(score_df) +
   scale_colour_viridis_c() +
   theme_bw() +
   geom_blank()
-
-

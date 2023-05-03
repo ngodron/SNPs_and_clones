@@ -60,20 +60,21 @@ mutation_balanced <- function(genome, mu, max_tot) {
 
 crossing_over <- function(genomes, cr) {
   # Randomised order pairwise single crossing over.
-  # To do: Location of crossing over is picked in a Gaussian centered around |SNPs|/2
+
   genomes <- genomes[sample(1:nrow(genomes)), ]
   crossed <- genomes
   for (i in 1:(nrow(genomes)/2)) {
     # print("Before")
     # print(genomes[(2*i-1):(2*i),])
     if (rbinom(1, 1, cr)) {
-      halfway <- floor(ncol(genomes)/2)
+      # pivot <- floor(ncol(genomes)/2)
+      pivot <- floor(runif(1, min = 2, max = ncol(genomes)-1))
       gen_1 <- 2*i - 1
       gen_2 <- 2*i
       crossed_1 <- 
-         c(genomes[gen_1, 1:halfway], genomes[gen_2, (halfway+1):ncol(genomes)])
+         c(genomes[gen_1, 1:pivot], genomes[gen_2, (pivot+1):ncol(genomes)])
       crossed_2 <- 
-         c(genomes[gen_2, 1:halfway], genomes[gen_1, (halfway+1):ncol(genomes)])
+         c(genomes[gen_2, 1:pivot], genomes[gen_1, (pivot+1):ncol(genomes)])
       if (rbinom(n = 1, size = 1, prob = cr / 100)) { # rare inversion event
         crossed[c(gen_1, gen_2), ] <- rbind(crossed_2, crossed_1)
       } else {
@@ -86,7 +87,7 @@ crossing_over <- function(genomes, cr) {
 }
 
 evolve <- function(genomes, mut_rate, conjug_rate, min_mut) {
-  maximum_mutations <- round((ncol(genomes) * mut_rate * 2))
+  # maximum_mutations <- round((ncol(genomes) * mut_rate * 2))
   out_genomes <- vector(mode = 'list', length = nrow(genomes))
   for (i in 1:nrow(genomes)) {
     out_genomes[[i]] <- mutation_balanced(genome = genomes[i, ],
@@ -94,7 +95,13 @@ evolve <- function(genomes, mut_rate, conjug_rate, min_mut) {
                                       max_tot = 20)
   }
   out_genomes <- do.call(what = rbind, args = out_genomes)
-  out_genomes <- 
-    crossing_over(genomes = out_genomes, cr = conjug_rate)
+  
+  if (! ncol(genomes) > 2) {
+  warning("Number of SNPs in genomes is not superior to 2, crossing-over was not performed.")
+  }
+  else {
+    out_genomes <- 
+      crossing_over(genomes = out_genomes, cr = conjug_rate)
+  }
   return(out_genomes)
 }
