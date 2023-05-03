@@ -1,7 +1,7 @@
 library(profvis)
-base_dir <- '../../THESE_KLA/'
-# base_dir <- '~/Kevin_These/'
-# setwd("/home/nicolas/2023/SNPs_and_clones")
+# base_dir <- '../../THESE_KLA/'
+base_dir <- '~/Kevin_These/'
+setwd("/home/nicolas/2023/SNPs_and_clones")
 
 
 snp_df <- 
@@ -42,14 +42,22 @@ genomes_diversity <- function(genomes) {
   return(out)
 }
 
-n_iter <- 1e2
-n_ind <- 1e2
-n_eli <- ceiling(n_ind / 50)
-n_chi <- 10
-n_be <- n_ind/n_chi - n_eli/n_chi
-n_be <- ceiling(n_be)
-n_ind <- n_be * n_chi + n_eli
+# General parameters
+n_iter <- 1e2 # Number of generations
+n_ind <- 1e2 # Number of individuals
+
+# Population parameters
+n_eli <- ceiling(n_ind / 20) # Count of elites
+n_nov <- ceiling(n_ind / 20) # Count of novel (random) individuals
+n_chi <- 4 # Number of children per "top genome"
+
+n_top <- n_ind/n_chi - (n_eli/n_chi) - (n_nov/n_chi)
+n_top <- ceiling(n_top) 
+
+n_ind <- n_top * n_chi + (n_eli + n_nov) # Total count of individuals
+
 mutation_rate <- 1e-3
+
 params <- 
   paste0('n_ind = ', n_ind, '\nmu = ', mutation_rate)
 
@@ -99,13 +107,13 @@ profvis({
       (lapply(curr_scores_models, function(x) x[[2]]))
     model_list[[i]] <-
       curr_models[[which(curr_scores == min(curr_scores))[1]]] 
-    rm(curr)
+    
     rm(curr_scores_models)
     print(summary(curr_scores))
     score_list[[i]]<- c(curr_scores)
     diversity[i] <- genomes_diversity(curr_gen)
     
-    # if (min(curr_scores) < 0.0) {
+    # if (min(curr_scores) < 0.0) {generate_G0
     #   print('tadaaaa')
     #   all_gen <- all_gen[1:i]
     #   score_list <- score_list[1:i]
@@ -115,9 +123,11 @@ profvis({
     next_gen <- 
       cell_division(genomes = curr_gen, 
                     scores = curr_scores, 
-                    n_best = n_be, 
+                    n_best = n_top, 
                     n_child = n_chi, 
-                    n_elite = n_eli, mu = mutation_rate, cr = 0)
+                    n_elite = n_eli, 
+                    n_novel = n_nov,
+                    mu = mutation_rate, cr = 0)
     rm(list = ls()[grep(pattern = 'curr_.*', x = ls())])
     curr_gen <- next_gen
   }
