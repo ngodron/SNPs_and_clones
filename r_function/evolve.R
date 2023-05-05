@@ -54,20 +54,17 @@ mutation_balanced <- function(genome, mu, max_tot) {
   to_mutate <- c(sample(x = which(genome == 0), size = mut_gain, replace = FALSE),
     sample(x = which(genome == 1), size = mut_loss, replace = FALSE))
   genome[to_mutate] <- ! genome[to_mutate]
-  on.exit(expr = rm(list = ls()))
+  
   return(genome)
 }
 
 crossing_over <- function(genomes, cr) {
   # Randomised order pairwise single crossing over.
-
   genomes <- genomes[sample(1:nrow(genomes)), ]
   crossed <- genomes
   for (i in 1:(nrow(genomes)/2)) {
-    # print("Before")
-    # print(genomes[(2*i-1):(2*i),])
     if (rbinom(1, 1, cr)) {
-      # pivot <- floor(ncol(genomes)/2)
+      
       pivot <- floor(runif(1, min = 2, max = ncol(genomes)-1))
       gen_1 <- 2*i - 1
       gen_2 <- 2*i
@@ -75,29 +72,31 @@ crossing_over <- function(genomes, cr) {
          c(genomes[gen_1, 1:pivot], genomes[gen_2, (pivot+1):ncol(genomes)])
       crossed_2 <- 
          c(genomes[gen_2, 1:pivot], genomes[gen_1, (pivot+1):ncol(genomes)])
-      if (rbinom(n = 1, size = 1, prob = cr / 100)) { # rare inversion event
-        crossed[c(gen_1, gen_2), ] <- rbind(crossed_2, crossed_1)
-      } else {
-        crossed[c(gen_1, gen_2), ] <- rbind(crossed_1, crossed_2)
+    if (rbinom(n = 1, size = 1, prob = cr / 100)) { # rare inversion event
+      crossed[c(gen_1, gen_2), ] <- rbind(crossed_2, crossed_1)
+    } else {
+      crossed[c(gen_1, gen_2), ] <- rbind(crossed_1, crossed_2)
       }
     }
-    on.exit(expr = rm(list = ls()))
+    
   }
   return(crossed)
 }
 
 evolve <- function(genomes, mut_rate, conjug_rate, min_mut) {
-  # maximum_mutations <- round((ncol(genomes) * mut_rate * 2))
   out_genomes <- vector(mode = 'list', length = nrow(genomes))
+  
   for (i in 1:nrow(genomes)) {
     out_genomes[[i]] <- mutation_balanced(genome = genomes[i, ],
                                       mu = mut_rate,
                                       max_tot = 20)
   }
-  out_genomes <- do.call(what = rbind, args = out_genomes)
+  
+  out_genomes <- 
+    do.call(what = rbind, args = out_genomes)
   
   if (! ncol(genomes) > 2) {
-  warning("Number of SNPs in genomes is not superior to 2, crossing-over was not performed.")
+    warning("Number of SNPs in genomes is not superior to 2, crossing-over was not performed.")
   }
   else {
     out_genomes <- 

@@ -1,14 +1,22 @@
 library(profvis)
-# base_dir <- '../../THESE_KLA/'
+
+
 base_dir <- '~/Kevin_These/'
-setwd("/home/nicolas/2023/SNPs_and_clones")
+# setwd("/home/nicolas/2023/SNPs_and_clones")
+
+library(pryr)
+library(tidyverse)
+
+base_dir <- '../../THESE_KLA/'
+
+
 
 
 snp_df <- 
-  read.delim(file = paste0(base_dir,'Current_File/230331_matrix_snp_gene_613.csv'))
+  read.delim(file = paste0(base_dir, 'Current_File/230331_matrix_snp_gene_613.csv'))
 
 metadata <- 
-  read.delim(file = paste0(base_dir,'/database/database_613.csv'))
+  read.delim(file = paste0(base_dir, '/database/database_613.csv'))
 
 pheno <- 
   merge(y = metadata, x = snp_df[,1:2], by.y = 'Reads', by.x = 'X') 
@@ -23,6 +31,7 @@ all_lin <- sort(unique(metadata$Lineage))
 n_lin <- length(all_lin)
 covar <- matrix(nrow = nrow(metadata), ncol = n_lin)
 colnames(covar) <- all_lin
+
 for (i in 1:n_lin) {
   curr_lin <- all_lin[i]
   covar[,i] <- metadata$Lineage == curr_lin
@@ -34,6 +43,7 @@ source('./r_function/calc_score.R')
 source('./r_function/cell_division.R')
 source('./r_function/evolve.R')
 
+
 genomes_diversity <- function(genomes) {
   n_by_cols <- colSums(genomes)
   genomes <- genomes[ ,n_by_cols >= 1, drop = FALSE]
@@ -43,8 +53,10 @@ genomes_diversity <- function(genomes) {
 }
 
 # General parameters
-n_iter <- 1e3 # Number of generations
-n_ind <- 1e2 # Number of individuals
+## Number of generations
+n_iter <- 5e3
+## Number of individuals
+n_ind <- 1e2 
 
 # Population parameters
 n_eli <- ceiling(n_ind / 20) # Count of elites
@@ -58,7 +70,7 @@ n_ind <- n_top * n_chi + (n_eli + n_nov) # Total count of individuals
 
 mutation_rate <- 1e-3
 
-params <- 
+print_params <- 
   paste0('n_ind = ', n_ind, '\nmu = ', mutation_rate)
 
 all_gen <- vector('list', n_iter)
@@ -79,7 +91,8 @@ diversity <- rep(NA_real_, n_iter)
 
 # library("profmem")
 # memory_usage <- profmem({
-# system.time({
+
+system.time({
 # profvis({
   
   for (i in 1:n_iter) {
@@ -112,14 +125,7 @@ diversity <- rep(NA_real_, n_iter)
     print(summary(curr_scores))
     score_list[[i]]<- c(curr_scores)
     diversity[i] <- genomes_diversity(curr_gen)
-    
-    # if (min(curr_scores) < 0.0) {generate_G0
-    #   print('tadaaaa')
-    #   all_gen <- all_gen[1:i]
-    #   score_list <- score_list[1:i]
-    #   break()
-    # }
-    
+
     next_gen <- 
       cell_division(genomes = curr_gen, 
                     scores = curr_scores, 
@@ -128,10 +134,9 @@ diversity <- rep(NA_real_, n_iter)
                     n_elite = n_eli, 
                     n_novel = n_nov,
                     mu = mutation_rate, cr = 0)
-    rm(list = ls()[grep(pattern = 'curr_.*', x = ls())])
     curr_gen <- next_gen
   }
-# })
+})
 
 # Rprofmem(NULL)
 
@@ -144,7 +149,7 @@ score_df <-
              diversity = rep(diversity, each= n_ind))
 
 
-require(tidyverse)
+
 conf_int <- 0.05
 score_df |> 
   group_by(gen) |>
@@ -182,7 +187,7 @@ ggplot(score_df) +
   geom_ribbon(aes(x = gen, ymin = conf_low, ymax = conf_high), alpha = 0.05) +
   geom_smooth(aes(x = gen, y = score), level = 0.99) +
   geom_point(aes(x = gen, y = gen_min, group = gen, colour = n_snps_min), size = 1, shape = 3) +
-  geom_text(aes(x = legend_pos[1], y = legend_pos[2]), label = params) +
+  geom_text(aes(x = legend_pos[1], y = legend_pos[2]), label = print_params) +
   scale_colour_viridis_c() +
   theme_bw() +
   geom_blank()

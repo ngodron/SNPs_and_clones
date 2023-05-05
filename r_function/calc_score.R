@@ -101,3 +101,11 @@ decision_tree_fitness <- function(snps, pheno, genome_size, covariables) {
 rand_fitness_mock <- function(snps, pheno) {
   return(runif(n = 1))
 }
+
+genomes_diversity <- function(genomes) {
+  n_by_cols <- colSums(genomes)
+  genomes <- genomes[ ,n_by_cols >= 1, drop = FALSE]
+  prop <- colSums(genomes) / nrow(genomes)
+  out <- 1 - abs(mean(prop) - 0.5) * 2
+  return(out)
+}

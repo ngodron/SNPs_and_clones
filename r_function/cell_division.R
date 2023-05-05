@@ -25,13 +25,17 @@ cell_division <- function(genomes, scores, n_best, n_child, n_elite, n_novel,
   novel <- generate_G0(n_snps = ncol(genomes), 
                        n_indiv = n_novel, 
                        p = runif(n = ncol(genomes), min = 0, max = mu))
-  is_elite <- to_keep[0:n_elite]
   
-  out_gen <- genomes[to_keep, ]
+  is_elite <- to_keep[0:n_elite]
+
+  out_gen <- matrix(nrow = nrow(genomes), ncol = ncol(genomes))
+  # print(c(address(out_gen), refs(out_gen)))
+  out_gen <- rbind(genomes[to_keep, ], novel)
+  
   out_gen <- evolve(genomes = out_gen, mut_rate = mu, conjug_rate = cr)
   
   out_gen <- rbind(out_gen, genomes[is_elite, ])
-  out_gen <- rbind(out_gen, novel)
+  
   return(out_gen)
 }
 
