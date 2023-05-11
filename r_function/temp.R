@@ -1,26 +1,18 @@
 library(profvis)
-
-
-base_dir <- '~/Kevin_These/'
-# setwd("/home/nicolas/2023/SNPs_and_clones")
-
 library(pryr)
 library(tidyverse)
 
-base_dir <- '../../THESE_KLA/'
-
-
-
+base_dir <- '~/Kevin_These/Current_File/'
+# base_dir <- '../../Kevin_These/Current_File/'
 
 snp_df <- 
-  read.delim(file = paste0(base_dir, 'Current_File/230331_matrix_snp_gene_613.csv'))
+  read.delim(file = paste0(base_dir, '230509_matrix_SNP_gene_594.csv'))
 
 metadata <- 
-  read.delim(file = paste0(base_dir, '/database/database_613.csv'))
+  read.delim(file = paste0(base_dir, 'database_594.csv'))
 
 pheno <- 
   merge(y = metadata, x = snp_df[,1:2], by.y = 'Reads', by.x = 'X') 
-
 
 pheno <- pheno$Disease != 'sputum'
 
@@ -37,24 +29,14 @@ for (i in 1:n_lin) {
   covar[,i] <- metadata$Lineage == curr_lin
 }
 
-
 source('./r_function/generate_GO.R')
 source('./r_function/calc_score.R')
 source('./r_function/cell_division.R')
 source('./r_function/evolve.R')
 
-
-genomes_diversity <- function(genomes) {
-  n_by_cols <- colSums(genomes)
-  genomes <- genomes[ ,n_by_cols >= 1, drop = FALSE]
-  prop <- colSums(genomes) / nrow(genomes)
-  out <- 1 - abs(mean(prop) - 0.5) * 2
-  return(out)
-}
-
 # General parameters
 ## Number of generations
-n_iter <- 5e3
+n_iter <- 1e2
 ## Number of individuals
 n_ind <- 1e2 
 
@@ -69,6 +51,7 @@ n_top <- ceiling(n_top)
 n_ind <- n_top * n_chi + (n_eli + n_nov) # Total count of individuals
 
 mutation_rate <- 1e-3
+crossing_rate <- 0.5
 
 print_params <- 
   paste0('n_ind = ', n_ind, '\nmu = ', mutation_rate)
@@ -133,12 +116,12 @@ system.time({
                     n_child = n_chi, 
                     n_elite = n_eli, 
                     n_novel = n_nov,
-                    mu = mutation_rate, cr = 0)
+                    mu = mutation_rate, cr = crossing_rate)
     curr_gen <- next_gen
   }
 })
 
-# Rprofmem(NULL)
+# Rprofmem(NULL) / 0.99
 
 score_df <- 
   data.frame(gen = rep(1:length(score_list), each = n_ind), 

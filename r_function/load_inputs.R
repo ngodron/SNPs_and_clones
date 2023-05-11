@@ -6,34 +6,16 @@
 # Directory path (char)
 # SNP presence/absence tab-separated file path (char)
 # Phenotype tab-separated file path (char)
-# Index of phenotype column (int)
+# Phenotype column index or name (int | char)
+# Optional: Covariate column(s) (int | char, combined with c() or not)
 
 # OUPUT:
 # Matrix of SNP absence/presence
-# (1D) Matrix of phenotype
+# (1D) matrix of phenotype
+# Optional: Covariate column(s) 
 
-## Parsing ----
-arguments <- list()
+## Testing completeness of given arguments ----
 
-# Directory in which are the SNP and phenotype files.
-arguments$dir <- commandArgs(trailingOnly = TRUE)[1]
-
-# Path to SNP presence/absence tab-separated file (absolute, or relative to --dir).
-arguments$snp <- commandArgs(trailingOnly = TRUE)[2]
-
-# Path to phenotype tab-separated file (absolute, or relative to --dir).
-arguments$pheno <- commandArgs(trailingOnly = TRUE)[3]
-
-# Index of phenotype column
-arguments$pheno_index <- commandArgs(trailingOnly = TRUE)[4]
-
-### For testing purposes ----
-# arguments$dir <- "/home/nicolas/Kevin_These/Current_File/"
-# arguments$snp <- "230331_matrix_snp_gene_613.csv"
-# arguments$pheno <- "database_613.csv"
-# arguments$pheno_index <- 3
-
-### Testing completeness of given arguments ----
 if (is.na(arguments$snp)) {
   stop("Path to SNP file was not provided (2nd trailing argument)")
 }
@@ -46,25 +28,55 @@ if (!is.na(arguments$dir)) {
   arguments$snp <- paste0(arguments$dir, arguments$snp)
   arguments$pheno <- paste0(arguments$dir, arguments$pheno)
 }
+# else arguments$snp & arguments$pheno are supposed to be absolute paths
+
+# To Do: Test files existence
 
 ## Input loading ----
 
-input_loading <- function(SNP_path, pheno_path, pheno_index) {
-  cat(SNP_path, "\n", pheno_path, "\n", pheno_index)
+input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL) {
+  cat("__Loading inputs__\n\nSNP path:", SNP_path, "\nPheno path:", pheno_path,
+      "\nPheno index:", pheno_index, "\nCovar index:", covar_index, "\n")
   
-  SNP_matrix <- read.delim(file = SNP_path, row.names = 1)
-  SNP_matrix <- as.matrix(SNP_matrix)
+  SNP_matrix <- as.matrix(read.delim(file = SNP_path, row.names = 1))
   
-  pheno_matrix <- read.delim(file = pheno_path)
-  pheno_matrix <- pheno_matrix[pheno_index]
-  pheno_matrix <- as.matrix(pheno_matrix)
+  pheno_file <- read.delim(file = pheno_path, row.names = 1)
+  pheno_matrix <- as.matrix(pheno_file[pheno_index])
+  covar_matrix <- as.matrix(pheno_file[covar_index])
   
-  output <- list(SNP_matrix, pheno_matrix)
+  # Toy test set:
+  # covar_matrix <- data.frame(LETTERS[1:6], rep(LETTERS[7:9],2), rep(LETTERS[10:11],3))
+  
+  # One-hot encoding of each covariate
+  n_values <- 0
+  covar_names <- NULL
+  for (i in 1:ncol(covar_matrix)) {
+    n_values <- n_values + length(unique(covar_matrix[,i]))
+    covar_names <- c(covar_names, sort(unique(covar_matrix[,i])))
+  }
+  
+  one_hot <- matrix(nrow = nrow(covar_matrix), ncol = n_values)
+  colnames(one_hot) <- covar_names
+  
+  ### The following one-hot encoding works, but code is as dirty as can be!
+  col_index <- 1
+  
+  for (i in 1:ncol(covar_matrix)) {
+    column_values <- sort(unique(covar_matrix[,i]))
+    
+    cat("\nCovariate n°:", col_index, "\nCovariate values:", column_values)
+    
+    for (j in col_index:(col_index+length(column_values)-1)) {
+      # print(j)
+      covar_value <- column_values[j-col_index+1]
+      one_hot[,j] <- covar_matrix[,i] == covar_value
+      # print(one_hot[,j])
+    }
+    col_index <- col_index + length(column_values)
+  }
+  
+  covar_matrix <- one_hot
+  
+  output <- list(SNP_matrix, pheno_matrix, covar_matrix)
   return(output)
 }
-
-matrices <- input_loading(arguments$snp, arguments$pheno, arguments$pheno_index)
-
-
-
-
