@@ -43,6 +43,10 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   
   pheno_file <- read.delim(file = pheno_path, row.names = 1)
   pheno_matrix <- as.matrix(pheno_file[pheno_index])
+  if (is.null(covar_index)) {
+    output <- list(SNP_matrix, pheno_matrix)
+    return(output)
+  }
   covar_matrix <- as.matrix(pheno_file[covar_index])
 
   

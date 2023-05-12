@@ -38,7 +38,9 @@ matrices <- input_loading(arguments$snp,
 
 snp_df <- matrices[[1]]
 pheno <- matrices[[2]]
-covar <- matrices[[3]]
+if (length(matrices) == 3) {
+  covar <- matrices[[3]]
+}
 
 source('./r_function/generate_GO.R')
 source('./r_function/calc_score.R')
