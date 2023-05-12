@@ -27,10 +27,11 @@ if (is.na(arguments$pheno)) {
 if (!is.na(arguments$dir)) {
   arguments$snp <- paste0(arguments$dir, arguments$snp)
   arguments$pheno <- paste0(arguments$dir, arguments$pheno)
-}
-# else arguments$snp & arguments$pheno are supposed to be absolute paths
+} # else arguments$snp & arguments$pheno are assumed to be absolute paths
 
-# To Do: Test files existence
+if (! (file.exists(arguments$snp) & file.exists(arguments$pheno))) {
+  stop("At least one of the two provided paths (SNPs and pheno) does not lead to a readable file.")
+}
 
 ## Input loading ----
 
@@ -43,9 +44,7 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   pheno_file <- read.delim(file = pheno_path, row.names = 1)
   pheno_matrix <- as.matrix(pheno_file[pheno_index])
   covar_matrix <- as.matrix(pheno_file[covar_index])
-  
-  # Toy test set:
-  # covar_matrix <- data.frame(LETTERS[1:6], rep(LETTERS[7:9],2), rep(LETTERS[10:11],3))
+
   
   # One-hot encoding of each covariate
   n_values <- 0

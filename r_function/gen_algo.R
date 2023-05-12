@@ -1,5 +1,5 @@
-library(profvis)
-library(pryr)
+# library(profvis)
+# library(pryr)
 library(tidyverse)
 
 arguments <- list()
@@ -45,3 +45,18 @@ source('./r_function/calc_score.R')
 source('./r_function/cell_division.R')
 source('./r_function/evolve.R')
 
+print_params <- 
+  paste0('n_ind = ', n_ind, '\nmu = ', mutation_rate)
+
+all_gen <- vector(mode = 'list', n_iter)
+score_list <- vector(mode = 'list', length = n_iter)
+model_list <- vector(mode = 'list', length = n_iter)
+
+if (file.exists('./temp/curr_gen.R')) {
+  source('./temp/curr_gen.R')
+} else {
+  curr_gen <- 
+    generate_G0(n_snps = ncol(snp_df), 
+                n_indiv = n_ind, 
+                p = runif(n = ncol(snp_df), min = 0, max = mutation_rate))
+}
