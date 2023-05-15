@@ -2,8 +2,8 @@ library(profvis)
 library(pryr)
 library(tidyverse)
 
-base_dir <- '~/Kevin_These/Current_File/'
-# base_dir <- '../../Kevin_These/Current_File/'
+# base_dir <- '~/Kevin_These/Current_File/'
+base_dir <- '../../THESE_KLA/Current_File/'
 
 snp_df <- 
   read.delim(file = paste0(base_dir, '230509_matrix_SNP_gene_594.csv'))
@@ -29,16 +29,19 @@ for (i in 1:n_lin) {
   covar[,i] <- metadata$Lineage == curr_lin
 }
 
-source('./r_function/generate_GO.R')
-source('./r_function/calc_score.R')
-source('./r_function/cell_division.R')
-source('./r_function/evolve.R')
+# source('./r_function/generate_GO.R')
+# source('./r_function/calc_score.R')
+# source('./r_function/cell_division.R')
+# source('./r_function/evolve.R')
+sapply(X = list.files(path = './r_function/list_version/', 
+                      full.names = TRUE), 
+       FUN = source)
 
 # General parameters
 ## Number of generations
 n_iter <- 1e2
 ## Number of individuals
-n_ind <- 1e2 
+n_ind <- 1e2
 
 # Population parameters
 n_eli <- ceiling(n_ind / 20) # Count of elites
@@ -62,7 +65,7 @@ curr_gen <-
   generate_G0(n_snps = ncol(snp_df), 
               n_indiv = n_ind, 
               p = runif(n = ncol(snp_df), min = 0, max = mutation_rate))
-rowSums(curr_gen)
+sapply(curr_gen, sum)
 
 score_list <- vector(mode = 'list', length = n_iter)
 model_list <- vector(mode = 'list', length = n_iter)
@@ -80,18 +83,21 @@ system.time({
   
   for (i in 1:n_iter) {
     cat('Generation ', i, '/', n_iter, '\n')
-    set_snps <- which(curr_gen == 1, arr.ind = TRUE)
-    set_snps <- set_snps[order(set_snps[,1]), ]
-    snp_list <- vector(mode = 'list', length = n_ind)
-    for (j in 1:n_ind) {
-      snp_list[[j]] <- 
-        set_snps[set_snps[,1] == j, 2, drop = TRUE]
-    }
-    all_gen[[i]] <- snp_list
+    # set_snps <- which(curr_gen == 1, arr.ind = TRUE)
+    # set_snps <- set_snps[order(set_snps[,1]), ]
+    
+    # for (j in 1:n_ind) {
+    #   snp_list[[j]] <- 
+    #     set_snps[set_snps[,1] == j, 2, drop = TRUE]
+    # }
+    all_gen[[i]] <- 
+      sapply(curr_gen, function(x) which(x == 1, arr.ind = TRUE))
+    all_gen[[i]] <- sapply(all_gen[[i]], function(x) names(snp_df)[x])
+      
     print(summary(sapply(all_gen[[i]], length)))
     
     curr_scores_models <- 
-      calc_score_nopar(genomes = curr_gen, 
+      calc_score(genomes = curr_gen, 
                        snps = snp_df, 
                        phenotype = pheno, 
                        fitness = decision_tree_fitness, 
@@ -103,11 +109,10 @@ system.time({
       (lapply(curr_scores_models, function(x) x[[2]]))
     model_list[[i]] <-
       curr_models[[which(curr_scores == min(curr_scores))[1]]] 
-    
     rm(curr_scores_models)
     print(summary(curr_scores))
     score_list[[i]]<- c(curr_scores)
-    diversity[i] <- genomes_diversity(curr_gen)
+    #diversity[i] <- genomes_diversity(curr_gen)
 
     next_gen <- 
       cell_division(genomes = curr_gen, 
@@ -117,6 +122,7 @@ system.time({
                     n_elite = n_eli, 
                     n_novel = n_nov,
                     mu = mutation_rate, cr = crossing_rate)
+    print(length(next_gen))
     curr_gen <- next_gen
   }
 })
@@ -134,37 +140,37 @@ score_df <-
 
 
 conf_int <- 0.05
-score_df |> 
+score_df |>
   group_by(gen) |>
   mutate(gen_min = min(score, na.rm = TRUE)) |>
   mutate(is_min = score == gen_min) |>
   mutate(n_snps_min = min(n_snps[score == gen_min])[1]) |>
-  mutate(conf_low = quantile(score, probs = conf_int)) |> 
+  mutate(conf_low = quantile(score, probs = conf_int)) |>
   mutate(conf_high = quantile(score, probs = 1-conf_int)) |>
-  ungroup() |> 
-  filter(gen >= 0) |> 
+  ungroup() |>
+  filter(gen >= 0) |>
   identity() -> score_df
 
 if (n_iter > 200) {
-  score_df |> 
+  score_df |>
     filter(gen %% (n_iter/100) == 0 | gen < 100) |>
     identity() -> score_df
 }
-
-ggplot(score_df, mapping = aes(x = gen, y = diversity)) +
-  geom_point(aes(x = gen, y = diversity, colour = gen_min)) +
-  geom_smooth() +
-  theme_bw()
-
-ggplot(score_df) +
-  geom_point(aes(x = 1 - gen_min,  y = diversity)) +
-  geom_smooth(aes(x = 1 - gen_min,  y = diversity)) +
-  theme_bw()
-
-# ggplot(score_df) +
-#   geom_boxplot(aes(x = gen, y = n_snps, group = gen)) +
+# 
+# ggplot(score_df, mapping = aes(x = gen, y = diversity)) +
+#   geom_point(aes(x = gen, y = diversity, colour = gen_min)) +
+#   geom_smooth() +
 #   theme_bw()
-
+# 
+# ggplot(score_df) +
+#   geom_point(aes(x = 1 - gen_min,  y = diversity)) +
+#   geom_smooth(aes(x = 1 - gen_min,  y = diversity)) +
+#   theme_bw()
+# 
+# # ggplot(score_df) +
+# #   geom_boxplot(aes(x = gen, y = n_snps, group = gen)) +
+# #   theme_bw()
+# 
 legend_pos <- c(x = 3/4*n_iter,y = max(score_df$conf_high))
 ggplot(score_df) +
   geom_ribbon(aes(x = gen, ymin = conf_low, ymax = conf_high), alpha = 0.05) +
@@ -174,3 +180,18 @@ ggplot(score_df) +
   scale_colour_viridis_c() +
   theme_bw() +
   geom_blank()
+
+
+
+# tmp_df <- data.frame(pheno, covar, snp_df)
+# 
+# system.time({
+#   model <- rpart::rpart(formula = pheno ~ ., 
+#                         data = tmp_df, 
+#                         minbucket = 10,
+#                         maxdepth = 10,
+#                         method = 'class')
+# })
+# 
+# 
+caret::confusionMatrix(data = as.factor(predict(model_list[[n_iter]])[, 1] <=0.5), as.factor(pheno))

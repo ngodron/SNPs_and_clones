@@ -17,7 +17,7 @@ calc_score_nopar <- function(genomes, snps, phenotype, fitness, covars) {
     all_scores[[i]] <-  
       fitness(snps = curr_snps, 
               pheno = phenotype, 
-              genome_size = ncol(genomes), 
+              genome_size = length(genomes), 
               covariables = covars) 
   }
   return(all_scores)
