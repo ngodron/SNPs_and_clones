@@ -34,8 +34,8 @@ cell_division <- function(genomes, scores, n_best, n_child, n_elite, n_novel,
   out_gen[((n_best * n_child)+1):((n_best * n_child)+n_novel)] <- 
     novel
   ####### LAST THING TO DO HERE IS TO CORRECT EVOLVE
-  out_gen[length(out_gen) - n_elite] <- 
-    evolve(genomes = out_gen[length(out_gen) - n_elite], 
+  out_gen[1:(length(out_gen) - n_elite)] <- 
+    evolve(genomes = out_gen[1:(length(out_gen) - n_elite)], 
            mut_rate = mu, conjug_rate = cr)
   #######
     out_gen[((n_best * n_child)+n_novel+1):length(out_gen)] <- 

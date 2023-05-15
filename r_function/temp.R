@@ -2,8 +2,8 @@ library(profvis)
 library(pryr)
 library(tidyverse)
 
-# base_dir <- '~/Kevin_These/Current_File/'
-base_dir <- '../../THESE_KLA/Current_File/'
+base_dir <- '~/Kevin_These/Current_File/'
+# base_dir <- '../../THESE_KLA/Current_File/'
 
 snp_df <- 
   read.delim(file = paste0(base_dir, '230509_matrix_SNP_gene_594.csv'))
@@ -39,7 +39,7 @@ sapply(X = list.files(path = './r_function/list_version/',
 
 # General parameters
 ## Number of generations
-n_iter <- 1e2
+n_iter <- 2e3
 ## Number of individuals
 n_ind <- 1e2
 

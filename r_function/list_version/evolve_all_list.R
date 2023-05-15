@@ -39,7 +39,7 @@ mutation_balanced <- function(genome, mu, max_tot) {
   if (total_mut > max_tot) {
     mut_loss <- mut_loss + mut_gain
     mut_loss <- min(mut_loss, n_set_mut)
-    mut_gain <- 0
+    mut_gain <- 0 # Could this line be removed?
   }
   
   # Making Gain and Loss mutations:
