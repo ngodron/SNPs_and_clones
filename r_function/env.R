@@ -1,15 +1,17 @@
 arguments$dir <- '~/Kevin_These/Current_File/'
 # arguments$dir <- '../../Kevin_These/Current_File/'
 
-arguments$snp <- '230509_matrix_SNP_gene_594.csv'
+arguments$snp <- '230516_matrix_SNP_gene_roary_594.csv'
 arguments$pheno <- 'database_594.csv'
 arguments$pheno_index <- 2
 arguments$covar_index <- 7
 
+arguments$verbose <- 2
+
 params_list <- list()
 # General parameters
 ## Number of generations
-params_list$n_iter <- 1e3
+params_list$n_iter <- 1e1
 ## Number of individuals
 params_list$n_ind <- 1e2 
 
@@ -29,3 +31,5 @@ params_list$n_ind <- (params_list$n_top * params_list$n_chi) +
 
 params_list$mutation_rate <- 1e-3
 params_list$crossing_rate <- 0.5
+
+fitness_fun <- decision_tree_fitness

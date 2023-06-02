@@ -42,6 +42,8 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   
   pheno_file <- read.delim(file = pheno_path, row.names = 1)
   pheno_matrix <- as.matrix(pheno_file[pheno_index])
+  pheno_matrix <- as.integer(as.factor(pheno_matrix))
+  
   covar_matrix <- as.matrix(pheno_file[covar_index])
   
   # Toy test set:
