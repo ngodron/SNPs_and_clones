@@ -78,17 +78,23 @@ all_gen <- vector(mode = 'list', length = n_iter)
 score_list <- vector(mode = 'list', length = n_iter)
 model_list <- vector(mode = 'list', length = n_iter)
 
+# Temporary /!\ ----
+# debugSource("~/2023/All_list/SNPs_and_clones/r_function/list_version/calc_score_all_list.R")
+pheno <- as.integer(pheno != "sputum")
+prop_priors <- sapply(X = sort(unique(pheno)), function(x) sum(pheno == x)) / length(pheno)
+save <- 1
+
+
 ## G.A. iterator: gen_algo ----
 gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, parameters, fitness_fun) {
   unpacking(parameters)
   cat("\n", "\n")
   
   for (i in 1:n_iter) {
-    i <- 1
     cat('Generation ', i, '/', n_iter, '\n')
     all_gen[[i]] <- 
       sapply(curr_gen, function(x) which(x == 1, arr.ind = TRUE))
-    # all_gen[[i]] <- sapply(all_gen[[i]], function(x) names(snp_df)[x])
+    all_gen[[i]] <- sapply(all_gen[[i]], function(x) colnames(snp_df)[x])
     
     print(summary(sapply(all_gen[[i]], length)))
     
@@ -122,8 +128,17 @@ gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, parameters, fitness
     # print(length(next_gen))
     curr_gen <- next_gen
   }
-  return(curr_gen)
+output <- list(all_gen, score_list, model_list, curr_gen)
+  return(output)
 }
 
-gen_algo(snp_df, pheno, covar, params_list, decision_tree_fitness)
+output_algo <- gen_algo(snp_df, pheno, covar, params_list, decision_tree_fitness)
 # 
+all_gen <- output_algo[[1]]
+score_list <- output_algo[[2]]
+model_list <- output_algo[[3]]
+curr_gen <- output_algo[[4]]
+
+if (save == 1) {
+  dump("curr_gen", file = "curr_gen.GAG")
+}

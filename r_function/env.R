@@ -11,7 +11,7 @@ arguments$verbose <- 2
 params_list <- list()
 # General parameters
 ## Number of generations
-params_list$n_iter <- 1e1
+params_list$n_iter <- 1e2
 ## Number of individuals
 params_list$n_ind <- 1e2 
 

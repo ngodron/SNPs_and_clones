@@ -32,7 +32,7 @@ decision_tree_fitness <- function(snps, pheno, genome_size, covariables, wgts) {
   if (ncol(snps) == 0) return(list(1, NA)) # NA for the model
   df <- data.frame(pheno, snps, covariables)
   #df <- as.data.frame(apply(X = df, MARGIN = 2, FUN = as.logical, simplify = TRUE))
-  wgts <- wgts[names(snps)] # filtering for wanted snps
+  wgts <- wgts[colnames(snps)] # filtering for wanted snps
   wgts <- c(wgts,rep(mean(wgts), ncol(covariables))) # adding mean weight for the covariables
   wgts <- 1/wgts
   formu <- formula(pheno ~ .)

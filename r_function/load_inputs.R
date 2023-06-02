@@ -42,7 +42,7 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   
   pheno_file <- read.delim(file = pheno_path, row.names = 1)
   pheno_matrix <- as.matrix(pheno_file[pheno_index])
-  pheno_matrix <- as.integer(as.factor(pheno_matrix))
+  pheno_matrix <- as.factor(pheno_matrix)
   
   covar_matrix <- as.matrix(pheno_file[covar_index])
   
@@ -66,7 +66,7 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   for (i in 1:ncol(covar_matrix)) {
     column_values <- sort(unique(covar_matrix[,i]))
     
-    cat("\nCovariate n°:", col_index, "\nCovariate values:", column_values)
+    cat("\nCovariate n°:", col_index, "\nCovariate values:", column_values, "\n\n\n")
     
     for (j in col_index:(col_index+length(column_values)-1)) {
       # print(j)
