@@ -8,8 +8,12 @@
 #   snps = 0/1 matrix with indiv in rows and snps in cols
 #   pheno = 0/1 vector of length = nrow(snps)
 
-calc_score_nopar <- function(genomes, snps, phenotype, fitness, covars) {
+calc_score_nopar <- function(genomes, snps, phenotype, fitness, covars, weights = NULL) {
+    if (is.null(weights)) {
+      weights <- rep(1/ncol(snps), ncol(snps))
+    }
   all_scores <- vector(mode = 'list', length = nrow(genomes))
+  
   for (i in 1:nrow(genomes)) {
     curr_genome <- which(genomes[i, ] == 1)
     # drop = F allows to keep single SNP genomes as matrix
@@ -18,23 +22,31 @@ calc_score_nopar <- function(genomes, snps, phenotype, fitness, covars) {
       fitness(snps = curr_snps, 
               pheno = phenotype, 
               genome_size = length(genomes), 
-              covariables = covars) 
+              covariables = covars,
+              wgts = weights) 
   }
   return(all_scores)
 }
 
-calc_score <- function(genomes, snps, phenotype, fitness, covars) {
-
-  # all_scores <- rep(NA_real_, nrow(genomes))
-  all_scores <- 
-    foreach(i = 1:nrow(genomes), .combine = 'c') %dopar% {
-      curr_genome <- which(genomes[i, ] == 1)
-      # drop = F allows to keep single SNP genomes as matrix
-      curr_snps <- snps[ , curr_genome, drop = FALSE] 
-      fitness(snps = curr_snps, pheno = phenotype, genome_size = ncol(genomes), covariables = covars) 
-  }
-  return(all_scores)
-}
+# calc_score <- function(genomes, snps, phenotype, fitness, covars, ) {
+#   browser()
+#   if (is.null(weights)) {
+#     weights <- rep(1/ncol(snps), ncol(snps))
+#   }
+#   # all_scores <- rep(NA_real_, nrow(genomes))
+#   all_scores <- 
+#     foreach(i = 1:nrow(genomes), .combine = 'c') %dopar% {
+#       curr_genome <- which(genomes[i, ] == 1)
+#       # drop = F allows to keep single SNP genomes as matrix
+#       curr_snps <- snps[ , curr_genome, drop = FALSE] 
+#       fitness(snps = curr_snps, 
+#               pheno = phenotype, 
+#               genome_size = ncol(genomes), 
+#               covariables = covars, 
+#               wgts = weights) 
+#   }
+#   return(all_scores)
+# }
 
 glm_fitness_mock <- function(snps, pheno, genome_size, covariables) {
   
@@ -71,7 +83,7 @@ glm_fitness_mock <- function(snps, pheno, genome_size, covariables) {
   return(list(out_score, model))
 }
 
-decision_tree_fitness <- function(snps, pheno, genome_size, covariables) {
+decision_tree_fitness <- function(snps, pheno, genome_size, covariables, wgts) {
   
   if (ncol(snps) == 0) return(list(1, NA)) # NA for the model
   
@@ -82,7 +94,8 @@ decision_tree_fitness <- function(snps, pheno, genome_size, covariables) {
     rpart::rpart(formula = formu, 
                  data = df, 
                  minbucket = 10, 
-                 method = 'class')
+                 method = 'class', 
+                 weights = wgts)
   predicted <- predict(object = model)
   predictions <- predicted[ , 1] <= 0.5 # predicted[ ,1] is smallest alphanum value
   # predictions <- predicted

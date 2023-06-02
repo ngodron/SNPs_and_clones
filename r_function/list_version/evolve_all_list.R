@@ -43,11 +43,15 @@ mutation_balanced <- function(genome, mu, max_tot) {
   }
   
   # Making Gain and Loss mutations:
-  to_mutate <- c(sample(x = which(genome == 0), size = mut_gain, replace = FALSE),
-    sample(x = which(genome == 1), size = mut_loss, replace = FALSE))
-  # print(to_mutate)
-  genome[to_mutate] <- ! genome[to_mutate]
-  
+  # to_set <- sample(x = which(genome == 0), size = mut_gain, replace = FALSE)
+  # to_unset <- sample(x = which(genome == 1), size = mut_loss, replace = FALSE)
+  # to_mutate <- c(to_set, to_unset)
+  # genome[to_mutate] <- ! genome[to_mutate]
+  # rm(to_mutate)
+  genome[sample(x = which(genome == 0), size = mut_gain, replace = FALSE)] <-
+    ! genome[sample(x = which(genome == 0), size = mut_gain, replace = FALSE)]
+  genome[sample(x = which(genome == 1), size = mut_loss, replace = FALSE)] <-
+    ! genome[sample(x = which(genome == 1), size = mut_loss, replace = FALSE)]
   return(genome)
 }
 
@@ -83,7 +87,6 @@ evolve <- function(genomes, mut_rate, conjug_rate, min_mut) {
                                       mu = mut_rate,
                                       max_tot = 20)
   }
-  
   if (! length(genomes) > 2) {
     warning("Number of SNPs in genomes is not superior to 2, crossing-over was not performed.")
   }
