@@ -43,10 +43,14 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   
   pheno_file <- read.delim(file = pheno_path, row.names = 1)
   pheno_matrix <- as.matrix(pheno_file[pheno_index])
+  pheno_matrix <- as.factor(pheno_matrix)
+  
+  # In case no covariates are to be added:
   if (is.null(covar_index)) {
     output <- list(SNP_matrix, pheno_matrix)
-    return(output)
+    return(output) # 2 elements in list
   }
+
   covar_matrix <- as.matrix(pheno_file[covar_index])
 
   
@@ -61,13 +65,13 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   one_hot <- matrix(nrow = nrow(covar_matrix), ncol = n_values)
   colnames(one_hot) <- covar_names
   
-  ### The following one-hot encoding works, but code is as dirty as can be!
+  ### The following one-hot encoding works, but code is dirty!
   col_index <- 1
   
   for (i in 1:ncol(covar_matrix)) {
     column_values <- sort(unique(covar_matrix[,i]))
     
-    cat("\nCovariate n°:", col_index, "\nCovariate values:", column_values)
+    cat("\nCovariate n°:", col_index, "\nCovariate values:", column_values, "\n\n\n")
     
     for (j in col_index:(col_index+length(column_values)-1)) {
       # print(j)
@@ -81,5 +85,5 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   covar_matrix <- one_hot
   
   output <- list(SNP_matrix, pheno_matrix, covar_matrix)
-  return(output)
+  return(output) # 3 elements in list
 }
