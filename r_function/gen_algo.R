@@ -1,7 +1,9 @@
+
 ## Sourcing functions ----
 sapply(X = list.files(path = './r_function/list_version', 
                       full.names = TRUE), 
        FUN = source)
+
 
 ## Arguments parsing ----
 arguments <- list()
@@ -63,6 +65,7 @@ pheno <- matrices[[2]]
 if (length(matrices) == 3) {
   covar <- matrices[[3]]
 }
+
 # rm(matrices)
 
 if (file.exists('./curr_gen.GAG')) {
@@ -80,12 +83,12 @@ all_gen <- vector(mode = 'list', length = n_iter)
 score_list <- vector(mode = 'list', length = n_iter)
 model_list <- vector(mode = 'list', length = n_iter)
 
+
 # Temporary /!\ ----
 # debugSource("~/2023/All_list/SNPs_and_clones/r_function/list_version/calc_score_all_list.R")
 pheno <- as.integer(pheno != "sputum")
 prop_priors <- sapply(X = sort(unique(pheno)), function(x) sum(pheno == x)) / length(pheno)
 save <- 1
-
 
 ## G.A. iterator: gen_algo ----
 gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, parameters, fitness_fun) {

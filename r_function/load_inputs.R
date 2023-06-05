@@ -27,10 +27,11 @@ if (is.na(arguments$pheno)) {
 if (!is.na(arguments$dir)) {
   arguments$snp <- paste0(arguments$dir, arguments$snp)
   arguments$pheno <- paste0(arguments$dir, arguments$pheno)
-}
-# else arguments$snp & arguments$pheno are supposed to be absolute paths
+} # else arguments$snp & arguments$pheno are assumed to be absolute paths
 
-# To Do: Test files existence
+if (! (file.exists(arguments$snp) & file.exists(arguments$pheno))) {
+  stop("At least one of the two provided paths (SNPs and pheno) does not lead to a readable file.")
+}
 
 ## Input loading ----
 
@@ -44,10 +45,14 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   pheno_matrix <- as.matrix(pheno_file[pheno_index])
   pheno_matrix <- as.factor(pheno_matrix)
   
+  # In case no covariates are to be added:
+  if (is.null(covar_index)) {
+    output <- list(SNP_matrix, pheno_matrix)
+    return(output) # 2 elements in list
+  }
+
   covar_matrix <- as.matrix(pheno_file[covar_index])
-  
-  # Toy test set:
-  # covar_matrix <- data.frame(LETTERS[1:6], rep(LETTERS[7:9],2), rep(LETTERS[10:11],3))
+
   
   # One-hot encoding of each covariate
   n_values <- 0
@@ -60,7 +65,7 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   one_hot <- matrix(nrow = nrow(covar_matrix), ncol = n_values)
   colnames(one_hot) <- covar_names
   
-  ### The following one-hot encoding works, but code is as dirty as can be!
+  ### The following one-hot encoding works, but code is dirty!
   col_index <- 1
   
   for (i in 1:ncol(covar_matrix)) {
@@ -80,5 +85,5 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   covar_matrix <- one_hot
   
   output <- list(SNP_matrix, pheno_matrix, covar_matrix)
-  return(output)
+  return(output) # 3 elements in list
 }
