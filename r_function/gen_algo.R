@@ -6,27 +6,29 @@ sapply(X = list.files(path = './r_function/list_version',
 ## Arguments parsing ----
 arguments <- list()
 
+n_iter <- commandArgs(trailingOnly = TRUE)[1]
+
 if (file.exists('./r_function/env.R')) {
   source('./r_function/env.R')
 } else {
   # Directory in which are the SNP and phenotype files.
-  arguments$dir <- commandArgs(trailingOnly = TRUE)[1]
+  arguments$dir <- commandArgs(trailingOnly = TRUE)[2]
   
   # Path to SNP presence/absence tab-separated file (absolute, or relative to --dir).
-  arguments$snp <- commandArgs(trailingOnly = TRUE)[2]
+  arguments$snp <- commandArgs(trailingOnly = TRUE)[3]
   
   # Path to phenotype tab-separated file (absolute, or relative to --dir).
-  arguments$pheno <- commandArgs(trailingOnly = TRUE)[3]
+  arguments$pheno <- commandArgs(trailingOnly = TRUE)[4]
   
   # Index of phenotype and optional covariate(s) columns.
-  arguments$pheno_index <- commandArgs(trailingOnly = TRUE)[4]
-  arguments$covar_index <- commandArgs(trailingOnly = TRUE)[5] # Can be "NULL"
+  arguments$pheno_index <- commandArgs(trailingOnly = TRUE)[5]
+  arguments$covar_index <- commandArgs(trailingOnly = TRUE)[6] # Can be "NULL"
   
   # Verbose can take values 0, 1 or 2.
-  arguments$verbose <- commandArgs(trailingOnly = TRUE)[6]
+  arguments$verbose <- commandArgs(trailingOnly = TRUE)[7]
   
   # List of genetic algorithm parameters:
-  params_list <- commandArgs(trailingOnly = TRUE)[7]
+  params_list <- commandArgs(trailingOnly = TRUE)[8]
   names(params_list) <- c("n_iter","n_ind","n_eli","n_nov","n_chi","n_top",
                           "mutation_rate","crossing_rate")
   
@@ -35,7 +37,7 @@ if (file.exists('./r_function/env.R')) {
   #   Where all parameters are integers,
   #   except mutation_rate and crossing_rate which have decimal values.
   
-  fitness_fun <- commandArgs(trailingOnly = TRUE)[8]
+  fitness_fun <- commandArgs(trailingOnly = TRUE)[9]
 }
 
 # Unpacking arguments and parameters into global environment

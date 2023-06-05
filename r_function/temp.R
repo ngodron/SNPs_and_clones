@@ -2,9 +2,9 @@ library(profvis)
 library(pryr)
 library(tidyverse)
 # set.seed(123456)
-# base_dir <- '~/Kevin_These/Current_File/'
+base_dir <- '~/Kevin_These/Current_File/'
 
-base_dir <- '../../THESE_KLA/Current_File/'
+# base_dir <- '../../THESE_KLA/Current_File/'
 
 curr_unique_name <- 
   c(letters, LETTERS, 0:9)
@@ -14,7 +14,7 @@ curr_unique_name <-
   paste0('../output/',format(Sys.time(), "%Y_%m_%d-%H_%M_%S-"),'-genet-', 
          curr_unique_name, '/', collapse = "")
 
-dir.create(path = curr_unique_name)
+# dir.create(path = curr_unique_name)
 
 
 snp_df <- 

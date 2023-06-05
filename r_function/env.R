@@ -1,3 +1,5 @@
+# Meta arguments ----
+
 arguments$dir <- '~/Kevin_These/Current_File/'
 # arguments$dir <- '../../Kevin_These/Current_File/'
 
@@ -8,10 +10,9 @@ arguments$covar_index <- 7
 
 arguments$verbose <- 2
 
+# Genetic algoritm parameters ----
 params_list <- list()
-# General parameters
-## Number of generations
-params_list$n_iter <- 1e2
+
 ## Number of individuals
 params_list$n_ind <- 1e2 
 
