@@ -5,5 +5,5 @@
 random.R
 SNPs_and_clones.Rproj
 mein_gott.RData
-20k_curr_gen.GAG
-curr_gen.GAG
+output/*
+stuff.R

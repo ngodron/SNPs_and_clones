@@ -6,11 +6,25 @@ total_iter=$3 # Total number of generations to run.
 
 remaining_gen=$total_iter
 
-if [ -f "curr_gen.GAG" ]; then
+if [ -f "./output/curr_gen.GAG" ]; then
 	echo "Renaming 'curr_gen.GAG' file to 'OLD_curr_gen.GAG'"
-	mv curr_gen.GAG OLD_curr_gen.GAG
-	sleep 2
+	mv ./output/curr_gen.GAG ./output/OLD_curr_gen.GAG
+	sleep .5
 fi
+
+if [ -f "./output/all_generations.tsv" ]; then
+	echo "Renaming 'all_generations.tsv' file to 'OLD_all_generations.tsv'"
+	mv ./output/all_generations.tsv ./output/OLD_all_generations.tsv
+	sleep .5
+fi
+
+if [ -f "./output/lastgen_models_list.GAG" ]; then
+	echo "Renaming 'lastgen_models_list.GAG' file to 'OLD_lastgen_models_list.GAG'"
+	mv ./output/lastgen_models_list.GAG ./output/OLD_lastgen_models_list.GAG
+	sleep .5
+fi
+
+printf "gen\tscor\tn_snps\n" > ./output/all_generations.tsv
 
 while [ "$remaining_gen" -gt 0 ]
 do
@@ -22,11 +36,12 @@ do
 		remaining_gen=0
 	fi
 	count_iter=$(($total_iter - $remaining_gen - $n_iter))
-	Rscript r_function/gen_algo.R $config_file $n_iter $count_iter
+	Rscript r_function/gen_algo.R $config_file $n_iter $count_iter $remaining_gen
+	cat ./output/all_gen_temp >> ./output/all_generations.tsv
+	rm ./output/all_gen_temp
 done
-
 
 echo "Total iterations:"
 echo $total_iter
-echo "Maximum iterations per script launch:"
+echo "Maximum iterations per script:"
 echo $max_iter

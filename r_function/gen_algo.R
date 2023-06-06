@@ -1,13 +1,21 @@
 ## Sourcing functions ----
+sink("/dev/null") # Linux-only (dirty) solution to suppress messages
 sapply(X = list.files(path = './r_function/GA_functions', 
                       full.names = TRUE), 
        FUN = source)
+sink()
 
 ## Arguments parsing ----
 config_file <- commandArgs(trailingOnly = TRUE)[1]
-n_iter <- commandArgs(trailingOnly = TRUE)[2]
-count_iter <- commandArgs(trailingOnly = TRUE)[3]
 
+n_iter <- as.integer(commandArgs(trailingOnly = TRUE)[2])
+count_iter <- as.integer(commandArgs(trailingOnly = TRUE)[3])
+remaining_gen <- as.integer(commandArgs(trailingOnly = TRUE)[4])
+
+#Debug:
+# print(paste(n_iter, count_iter, remaining_gen))
+
+total_iter <- n_iter + count_iter + remaining_gen
 
 if (file.exists(config_file)) {
   source(config_file)
@@ -17,6 +25,7 @@ if (file.exists(config_file)) {
 
 # Unpacking arguments and parameters into global environment
 unpacking <- function(list_args) {
+  cat("\n")
   for (i in 1:length(list_args)) {
     assign(names(list_args)[i], list_args[[i]], envir = .GlobalEnv)
     cat(names(list_args)[i], ":", list_args[[i]], "\n")
@@ -41,8 +50,8 @@ if (length(matrices) == 3) {
 
 # rm(matrices)
 
-if (file.exists('./curr_gen.GAG')) {
-  source('curr_gen.GAG')
+if (file.exists('./output/curr_gen.GAG')) {
+  source('./output/curr_gen.GAG')
 } else {
   curr_gen <-
     generate_G0(n_snps = ncol(snp_df), n_indiv = n_ind, p = mutation_rate)
@@ -63,13 +72,16 @@ pheno <- as.integer(pheno != "sputum")
 prop_priors <- sapply(X = sort(unique(pheno)), function(x) sum(pheno == x)) / length(pheno)
 save <- 1
 
-## G.A. iterator: gen_algo ----
+## GA iterator: gen_algo ----
 gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, parameters, fitness_fun) {
+  sink("/dev/null")
   unpacking(parameters)
+  sink()
+  
   cat("\n", "\n")
   
   for (i in 1:n_iter) {
-    cat('Generation ', i, '/', n_iter, '\n')
+    cat('Generation ', count_iter + i, '/', total_iter, '\n')
     all_gen[[i]] <- 
       sapply(curr_gen, function(x) which(x == 1, arr.ind = TRUE))
     all_gen[[i]] <- sapply(all_gen[[i]], function(x) colnames(snp_df)[x])
@@ -93,7 +105,6 @@ gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, parameters, fitness
     rm(curr_scores_models)
     print(summary(curr_scores))
     score_list[[i]]<- c(curr_scores)
-    #diversity[i] <- genomes_diversity(curr_gen)
     
     next_gen <- 
       cell_division(genomes = curr_gen, 
@@ -111,12 +122,24 @@ output <- list(all_gen, score_list, model_list, curr_gen)
 }
 
 output_algo <- gen_algo(snp_df, pheno, covar, params_list, decision_tree_fitness)
-# 
+
 all_gen <- output_algo[[1]]
 score_list <- output_algo[[2]]
 model_list <- output_algo[[3]]
 curr_gen <- output_algo[[4]]
 
+score_df <-
+  data.frame(gen = rep((count_iter + 1):(count_iter + length(score_list)), each = n_ind),
+             score = unlist(score_list),
+             n_snps = unlist(sapply(all_gen, function(x) {sapply(x, length)},
+                                              simplify = FALSE)))
+
 if (save == 1) {
-  dump("curr_gen", file = "curr_gen.GAG")
+  dump("curr_gen", file = "./output/curr_gen.GAG")
+  write.table(score_df, file ="./output/all_gen_temp", quote = FALSE,
+                      sep = "\t", row.names = FALSE, col.names = FALSE)
+  if (remaining_gen == 0) {
+    save("model_list", file = "./output/lastgen_models_list.GAG", version = 3)
+    # Version 3 supported by 3.5.0+ versions of R
+  }
 }

@@ -25,12 +25,12 @@ arguments$verbose <- 2
 params_list <- list()
 
 ## Number of individuals
-params_list$n_ind <- 1e2 
+params_list$n_ind <- 1e1 
 
 # Population parameters: number of elites, novel individuals and children per individual.
 params_list$n_eli <- ceiling(params_list$n_ind / 20) # Count of elites
 params_list$n_nov <- ceiling(params_list$n_ind / 20) # Count of novel (random) individuals
-params_list$n_chi <- 4 # Number of children per "top genome"
+params_list$n_chi <- 2 # Number of children per "top genome"
 
 # Determining number of "top" individuals that will reproduce
 params_list$n_top <- 

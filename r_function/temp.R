@@ -62,11 +62,7 @@ for (i in 1:n_lin) {
   covar[,i] <- metadata$Lineage == curr_lin
 }
 
-# source('./r_function/generate_GO.R')
-# source('./r_function/calc_score.R')
-# source('./r_function/cell_division.R')
-# source('./r_function/evolve.R')
-sapply(X = list.files(path = './r_function/list_version/', 
+sapply(X = list.files(path = './r_function/GA_functions/', 
                       full.names = TRUE), 
        FUN = source)
 
