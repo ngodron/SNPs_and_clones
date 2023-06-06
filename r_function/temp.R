@@ -34,7 +34,7 @@ prop_priors <- sapply(X = unique(pheno), function(x) 1 - sum(pheno == x) / lengt
 prop_priors <- c(0.5,0.5)
   
 weights_df <- 
-  read.csv(file = '../../THESE_KLA/Current_File/2023_05_31-homoplasy.tsv', 
+  read.csv(file = paste0(base_dir, '2023_05_31-homoplasy.tsv'), 
            sep = '\t')
 w_in_snp <- weights_df$SNP %in% names(snp_df)
 snp_in_w <- names(snp_df) %in% weights_df$SNP
