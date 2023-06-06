@@ -12,7 +12,10 @@ n_iter <- as.integer(commandArgs(trailingOnly = TRUE)[2])
 count_iter <- as.integer(commandArgs(trailingOnly = TRUE)[3])
 remaining_gen <- as.integer(commandArgs(trailingOnly = TRUE)[4])
 
-#Debug:
+save <- as.integer(commandArgs(trailingOnly = TRUE)[4])
+verbose <- as.integer(commandArgs(trailingOnly = TRUE)[4])
+
+# Debug:
 # print(paste(n_iter, count_iter, remaining_gen))
 
 total_iter <- n_iter + count_iter + remaining_gen
@@ -70,7 +73,6 @@ model_list <- vector(mode = 'list', length = n_iter)
 # debugSource("~/2023/All_list/SNPs_and_clones/r_function/list_version/calc_score_all_list.R")
 pheno <- as.integer(pheno != "sputum")
 prop_priors <- sapply(X = sort(unique(pheno)), function(x) sum(pheno == x)) / length(pheno)
-save <- 1
 
 ## GA iterator: gen_algo ----
 gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, parameters, fitness_fun) {
@@ -134,12 +136,16 @@ score_df <-
              n_snps = unlist(sapply(all_gen, function(x) {sapply(x, length)},
                                               simplify = FALSE)))
 
-if (save == 1) {
+if (save >= 1) {
   dump("curr_gen", file = "./output/curr_gen.GAG")
   write.table(score_df, file ="./output/all_gen_temp", quote = FALSE,
                       sep = "\t", row.names = FALSE, col.names = FALSE)
   if (remaining_gen == 0) {
     save("model_list", file = "./output/lastgen_models_list.GAG", version = 3)
     # Version 3 supported by 3.5.0+ versions of R
+  }
+  if (save >= 2) {
+    save("all_gen", file = "./output/all_gen_list.GAG", version = 3)
+    # Version 3 supported by 3.5.0+ versions of R  
   }
 }
