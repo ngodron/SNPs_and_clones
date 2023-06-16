@@ -1,6 +1,7 @@
-library(profvis)
-library(pryr)
+# library(profvis)
+# library(pryr)
 library(tidyverse)
+library(ggh4x)
 # set.seed(123456)
 base_dir <- '~/Kevin_These/Current_File/'
 
@@ -68,7 +69,7 @@ sapply(X = list.files(path = './r_function/GA_functions/',
 
 # General parameters
 ## Number of generations
-n_iter <- 1e2
+n_iter <- 2e3
 ## Number of individuals
 n_ind <- 1e2
 
@@ -86,7 +87,7 @@ mutation_rate <- 1e-3
 crossing_rate <- 0.5
 
 print_params <- 
-  paste0('n_ind = ', n_ind, '\nmu = ', mutation_rate)
+  paste0('n_ind = ', n_ind, '\nmu = ', mutation_rate, '\ncr = ', crossing_rate)
 
 all_gen <- vector('list', n_iter)
 
@@ -211,15 +212,17 @@ if (n_iter > 200) {
 # 
 legend_pos <- c(x = 3/4*n_iter,y = max(score_df$conf_high))
 ggplot(score_df) +
-  geom_ribbon(aes(x = gen, ymin = conf_low, ymax = conf_high), alpha = 0.05) +
+  geom_ribbon(aes(x = gen, ymin = conf_low, ymax = conf_high), alpha = 0.15) +
   geom_smooth(aes(x = gen, y = score), level = 0.99) +
   geom_point(aes(x = gen, y = gen_min, group = gen, colour = n_snps_min), size = 1, shape = 3) +
-  geom_text(aes(x = legend_pos[1], y = legend_pos[2]), label = print_params) +
+  # geom_text(aes(x = legend_pos[1], y = legend_pos[2]), label = print_params) +
   scale_colour_viridis_c() +
   theme_bw() +
+  xlab("Generations") +
+  ylab("Loss") +
   geom_blank()
 
-rattle::fancyRpartPlot(model_list[[n_iter]], cex = 0.8)
+wrattle::fancyRpartPlot(model_list[[n_iter]], cex = 0.8)
 rpart.plot::rpart.plot(model_list[[n_iter]], cex = 0.8)
 
 tmp_df <- data.frame(pheno,  snp_df, covar)

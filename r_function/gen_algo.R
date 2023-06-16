@@ -12,8 +12,8 @@ n_iter <- as.integer(commandArgs(trailingOnly = TRUE)[2])
 count_iter <- as.integer(commandArgs(trailingOnly = TRUE)[3])
 remaining_gen <- as.integer(commandArgs(trailingOnly = TRUE)[4])
 
-save <- as.integer(commandArgs(trailingOnly = TRUE)[4])
-verbose <- as.integer(commandArgs(trailingOnly = TRUE)[4])
+save <- as.integer(commandArgs(trailingOnly = TRUE)[5])
+verbose <- as.integer(commandArgs(trailingOnly = TRUE)[6])
 
 # Debug:
 # print(paste(n_iter, count_iter, remaining_gen))
@@ -72,7 +72,6 @@ model_list <- vector(mode = 'list', length = n_iter)
 # Temporary /!\ ----
 # debugSource("~/2023/All_list/SNPs_and_clones/r_function/list_version/calc_score_all_list.R")
 pheno <- as.integer(pheno != "sputum")
-prop_priors <- sapply(X = sort(unique(pheno)), function(x) sum(pheno == x)) / length(pheno)
 
 ## GA iterator: gen_algo ----
 gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, parameters, fitness_fun) {
