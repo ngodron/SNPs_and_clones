@@ -19,7 +19,7 @@ curr_unique_name <-
 
 
 snp_df <- 
-  read.delim(file = paste0(base_dir, '230516_matrix_SNP_gene_roary_594.csv'))
+  read.delim(file = paste0(base_dir, '230615_SNP_roary_594.csv'))
 strain_names <- snp_df[,1]
 
 metadata <- 
