@@ -1,6 +1,6 @@
 # SNPs_and_clones
 
-![Genetic Algorithm implementation visual explanation](GAGexplained.PNG)
+![Genetic Algorithm implementation visual explanation](GAG_explained.PNG)
 
 # Goal
 
