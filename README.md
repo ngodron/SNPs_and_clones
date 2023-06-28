@@ -1,6 +1,6 @@
 # SNPs_and_clones
 
-![Genetic Algorithm implementation visual explanation](GAG_explained.PNG)
+[GAG_explained.PNG](https://github.com/OGrondin/SNPs_and_clones/blob/main/README.md)
 
 # Goal
 
