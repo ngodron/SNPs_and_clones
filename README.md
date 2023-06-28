@@ -1,5 +1,7 @@
 # SNPs_and_clones
 
+![Genetic Algorithm implementation visual explanation](GAGexplained.PNG)
+
 # Goal
 
 Implement a Genetic Algorithm to study SNP haplotypes.
