@@ -6,13 +6,19 @@ arguments$dir <- '~/Kevin_These/Current_File/'
 # arguments$dir <- '../../Kevin_These/Current_File/'
 
 # Path to SNP presence/absence tab-separated file (absolute, or relative to --dir).
-arguments$snp <- '230516_matrix_SNP_gene_roary_594.csv'
+arguments$snp <- '230615_SNP_roary_594.csv'
 # Path to phenotype tab-separated file (absolute, or relative to --dir).
 arguments$pheno <- 'database_594.csv'
 
 # Index of phenotype and optional covariate(s) columns in pheno file.
 arguments$pheno_index <- 2
 arguments$covar_index <- 7
+
+# Path to (optional) cost tab-separated file (absolute, or relative to --dir).
+arguments$cost <- '2023_06_29-homoplasy.tsv'
+
+# Index of optional weight column in weights file.
+arguments$cost_index <- 4
 
 # Optional verbose argument can take values 0, 1 or 2.
 # To do: Make it functional, set default to 1 in gen_algo.R

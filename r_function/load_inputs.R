@@ -27,11 +27,21 @@ if (is.na(arguments$pheno)) {
 if (!is.na(arguments$dir)) {
   arguments$snp <- paste0(arguments$dir, arguments$snp)
   arguments$pheno <- paste0(arguments$dir, arguments$pheno)
-} # else arguments$snp & arguments$pheno are assumed to be absolute paths
+  arguments$cost <- paste0(arguments$dir, arguments$cost)
+} # else arguments$snp, arguments$pheno & arguments$weights are absolute paths
 
-if (! (file.exists(arguments$snp) & file.exists(arguments$pheno))) {
-  stop("At least one of the two provided paths (SNPs and pheno) does not lead to a readable file.")
+if (! file.exists(arguments$snp)) {
+  stop("The provided path of SNPs does not lead to a readable file.")
 }
+if (! file.exists(arguments$pheno)) {
+  stop("The provided path of phenotypes does not lead to a readable file.")
+}
+# if (! file.exists(arguments$cost)) {
+#   message(
+# "The provided path of costs does not lead to a readable file,
+# or no costs were provided. The objective function will compute without costs.")
+# }
+
 
 ## Input loading ----
 
@@ -86,4 +96,16 @@ input_loading <- function(SNP_path, pheno_path, pheno_index, covar_index = NULL)
   
   output <- list(SNP_matrix, pheno_matrix, covar_matrix)
   return(output) # 3 elements in list
+}
+
+cost_loading <- function (cost_path, cost_index, covar_names) {
+  count_covar <- length(covar_names)
+  cost_file <- read.delim(file = cost_path, row.names = 1)
+  cost_matrix <- as.matrix(cost_file[cost_index])
+  cost_matrix <- rbind(cost_matrix,
+                       matrix(data = rep(1, count_covar)))
+  dimnames(cost_matrix)[[1]] <- 
+    c(dimnames(cost_matrix)[[1]][1:(nrow(cost_matrix)- count_covar)], covar_names)
+  
+  return(cost_matrix)
 }

@@ -47,8 +47,8 @@ do
 	fi
 	count_iter=$(($total_iter - $remaining_gen - $n_iter))
 	Rscript r_function/gen_algo.R $config_file $n_iter $count_iter $remaining_gen $save $verbose
-	cat ./output/all_gen_list.GAG >> ./output/all_generations.tsv
-	rm ./output/all_gen_list.GAG
+	cat ./output/all_gen_temp >> ./output/all_generations.tsv
+	rm ./output/all_gen_temp
 done
 
 echo "Total iterations:"

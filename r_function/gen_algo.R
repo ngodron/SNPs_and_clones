@@ -28,7 +28,9 @@ if (file.exists(config_file)) {
 
 # Unpacking arguments and parameters into global environment
 unpacking <- function(list_args) {
-  cat("\n")
+  if (verbose >= 1){
+    cat("\n") 
+  }
   for (i in 1:length(list_args)) {
     assign(names(list_args)[i], list_args[[i]], envir = .GlobalEnv)
     cat(names(list_args)[i], ":", list_args[[i]], "\n")
@@ -49,6 +51,10 @@ snp_df <- matrices[[1]]
 pheno <- matrices[[2]]
 if (length(matrices) == 3) {
   covar <- matrices[[3]]
+}
+
+if (! (is.null(arguments$cost) | is.null(arguments$cost_index)) ) {
+  cost_vector <- cost_loading(arguments$cost, arguments$cost_index, colnames(covar))
 }
 
 # rm(matrices)
@@ -74,11 +80,10 @@ model_list <- vector(mode = 'list', length = n_iter)
 pheno <- as.integer(pheno != "sputum")
 
 ## GA iterator: gen_algo ----
-gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, parameters, fitness_fun) {
+gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, cost_matrix = NULL, parameters, fitness_fun) {
   sink("/dev/null")
   unpacking(parameters)
   sink()
-  
   cat("\n", "\n")
   
   for (i in 1:n_iter) {
@@ -95,7 +100,7 @@ gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, parameters, fitness
                  phenotype = pheno, 
                  fitness = fitness_fun, 
                  covars = covar,
-                 weights = NULL)
+                 costs = cost_matrix) # To be updated to cost_matrix when functional
     
     curr_scores <- 
       unlist(lapply(curr_scores_models, function(x) x[[1]]))
@@ -122,7 +127,7 @@ output <- list(all_gen, score_list, model_list, curr_gen)
   return(output)
 }
 
-output_algo <- gen_algo(snp_df, pheno, covar, params_list, decision_tree_fitness)
+output_algo <- gen_algo(snp_df, pheno, covar, cost_vector, params_list, decision_tree_fitness)
 
 all_gen <- output_algo[[1]]
 score_list <- output_algo[[2]]
@@ -135,12 +140,14 @@ score_df <-
              n_snps = unlist(sapply(all_gen, function(x) {sapply(x, length)},
                                               simplify = FALSE)))
 
+out_last_models <- model_list[[length(model_list)]] 
+
 if (save >= 1) {
   dump("curr_gen", file = "./output/curr_gen.GAG")
   write.table(score_df, file ="./output/all_gen_temp", quote = FALSE,
                       sep = "\t", row.names = FALSE, col.names = FALSE)
   if (remaining_gen == 0) {
-    save("model_list", file = "./output/lastgen_models_list.GAG", version = 3)
+    save("out_last_models", file = "./output/toload_lastgen_models.GAG", version = 3)
     # Version 3 supported by 3.5.0+ versions of R
   }
   if (save >= 2) {
