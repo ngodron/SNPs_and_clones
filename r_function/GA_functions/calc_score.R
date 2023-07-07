@@ -8,10 +8,12 @@
 #   snps = 0/1 matrix with indiv in rows and snps in cols
 #   pheno = 0/1 vector of length = nrow(snps)
 
-calc_score <- function(genomes, snps, phenotype, fitness, covars, costs = NULL) {
+calc_score <- function(genomes, snps, phenotype, covars,
+                       fitness, costs = NULL, met = "mcc") {
   if (is.null(costs)) {
-    costs <- rep(1, ncol(snps))
-    names(costs) <- colnames(snp_df)
+    costs <- rep(1, (ncol(snps)+ ncol(covars)))
+    names(costs) <- c(colnames(snp_df), colnames(covars))
+    costs <- as.matrix(costs)
   }
   all_scores <- vector(mode = 'list', length = length(genomes))
   for (i in 1:length(genomes)) {
@@ -22,13 +24,15 @@ calc_score <- function(genomes, snps, phenotype, fitness, covars, costs = NULL) 
               pheno = phenotype, 
               genome_size = ncol(genomes), 
               covariables = covars,
-              costs_split = costs) 
+              costs_split = costs,
+              metric = "mcc") 
   }
   return(all_scores)
 }
 
 
-decision_tree_fitness <- function(snps, pheno, genome_size, covariables, costs_split) {
+decision_tree_fitness <- function(snps, pheno, genome_size, covariables, 
+                                  costs_split, metric) {
   if (ncol(snps) == 0) return(list(1, NA)) # NA for the model
   df <- data.frame(pheno, snps, covariables)
   to_keep <- c(colnames(snps), colnames(covariables))
@@ -47,14 +51,25 @@ decision_tree_fitness <- function(snps, pheno, genome_size, covariables, costs_s
   predicted <- predict(object = model)
   predictions <- predicted[ , 1] <= 0.5 # predicted[ ,1] is smallest alphanum value
   # predictions <- predicted
-  pred_TP <- sum(pheno & predictions)
-  pred_TN <- sum(! pheno & ! predictions)
-  pred_FP <- sum(! pheno & predictions)
-  pred_FN <- sum(pheno & ! predictions)
+  TP <- sum(pheno & predictions)
+  TN <- sum(! pheno & ! predictions)
+  FP <- sum(! pheno & predictions)
+  FN <- sum(pheno & ! predictions)
   
-  accu <- (pred_TP + pred_TN) / (pred_TP + pred_TN + pred_FP + pred_FN)
-  
-  out_score <- 1 - accu
+  if (metric == "loss") {
+    accu <- (TP + TN) / (TP + TN + FP + FN)
+    out_score <- 1 - accu
+  }
+  if (metric == "mcc") {
+    margins <- ((TP+FP)*(TP+FN)*(TN+FP)*(TN+FN))
+    if (margins  == 0 | is.na(margins)){
+      mcc <- 0
+    } else {
+      mcc <- (TP*TN - FP*FN) / ((TP+FP)*(TP+FN)*(TN+FP)*(TN+FN))**0.5
+    }
+    out_score <- 1 - mcc 
+  }
+
   rm(formu)
   return(list(out_score, model))
 }

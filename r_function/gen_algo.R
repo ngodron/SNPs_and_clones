@@ -5,6 +5,8 @@ sapply(X = list.files(path = './r_function/GA_functions',
        FUN = source)
 sink()
 
+set.seed("1234")
+
 ## Arguments parsing ----
 config_file <- commandArgs(trailingOnly = TRUE)[1]
 
@@ -98,9 +100,10 @@ gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, cost_matrix = NULL,
       calc_score(genomes = curr_gen, 
                  snps = snp_df, 
                  phenotype = pheno, 
-                 fitness = fitness_fun, 
                  covars = covar,
-                 costs = cost_matrix) # To be updated to cost_matrix when functional
+                 fitness = fitness_fun,
+                 costs = cost_matrix,
+                 met = "mcc")
     
     curr_scores <- 
       unlist(lapply(curr_scores_models, function(x) x[[1]]))
@@ -123,11 +126,12 @@ gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, cost_matrix = NULL,
     # print(length(next_gen))
     curr_gen <- next_gen
   }
-output <- list(all_gen, score_list, model_list, curr_gen)
+  output <- list(all_gen, score_list, model_list, curr_gen)
   return(output)
 }
 
 output_algo <- gen_algo(snp_df, pheno, covar, cost_vector, params_list, decision_tree_fitness)
+
 
 all_gen <- output_algo[[1]]
 score_list <- output_algo[[2]]
@@ -140,14 +144,17 @@ score_df <-
              n_snps = unlist(sapply(all_gen, function(x) {sapply(x, length)},
                                               simplify = FALSE)))
 
-out_last_models <- model_list[[length(model_list)]] 
+# out_last_models <- model_list[[length(model_list)]] 
+# rpart.plot::rpart.plot(out_last_models)
+
 
 if (save >= 1) {
   dump("curr_gen", file = "./output/curr_gen.GAG")
   write.table(score_df, file ="./output/all_gen_temp", quote = FALSE,
                       sep = "\t", row.names = FALSE, col.names = FALSE)
   if (remaining_gen == 0) {
-    save("out_last_models", file = "./output/toload_lastgen_models.GAG", version = 3)
+    print(model_list)
+    save("model_list", file = "./output/toload_lastgen_models.GAG", version = 3)
     # Version 3 supported by 3.5.0+ versions of R
   }
   if (save >= 2) {
