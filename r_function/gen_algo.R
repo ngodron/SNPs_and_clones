@@ -1,11 +1,7 @@
 ## Sourcing functions ----
-sink("/dev/null") # Linux-only (dirty) solution to suppress messages
 sapply(X = list.files(path = './r_function/GA_functions', 
                       full.names = TRUE), 
        FUN = source)
-sink()
-
-set.seed("1234")
 
 ## Arguments parsing ----
 config_file <- commandArgs(trailingOnly = TRUE)[1]
