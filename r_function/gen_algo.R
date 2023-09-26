@@ -1,105 +1,81 @@
-## Sourcing functions ----
-sapply(X = list.files(path = './r_function/GA_functions', 
-                      full.names = TRUE), 
-       FUN = source)
 
-## Arguments parsing ----
-config_file <- commandArgs(trailingOnly = TRUE)[1]
-
-n_iter <- as.integer(commandArgs(trailingOnly = TRUE)[2])
-count_iter <- as.integer(commandArgs(trailingOnly = TRUE)[3])
-remaining_gen <- as.integer(commandArgs(trailingOnly = TRUE)[4])
-
-save <- as.integer(commandArgs(trailingOnly = TRUE)[5])
-verbose <- as.integer(commandArgs(trailingOnly = TRUE)[6])
-
-# Debug:
-# print(paste(n_iter, count_iter, remaining_gen))
-
-total_iter <- n_iter + count_iter + remaining_gen
-
-if (file.exists(config_file)) {
-  source(config_file)
-} else {
-  stop("The path to config file is either wrong or unreadable")
-}
-
-# Unpacking arguments and parameters into global environment
-unpacking <- function(list_args) {
-  if (verbose >= 1){
-    cat("\n") 
-  }
-  for (i in 1:length(list_args)) {
-    assign(names(list_args)[i], list_args[[i]], envir = .GlobalEnv)
-    cat(names(list_args)[i], ":", list_args[[i]], "\n")
-  }
-} 
-
-unpacking(arguments)
-unpacking(params_list)
-
-## Inputs ----
-source('./r_function/load_inputs.R')
-matrices <- input_loading(arguments$snp,
-                          arguments$pheno, 
-                          arguments$pheno_index,
-                          arguments$covar_index)
-
-snp_df <- matrices[[1]]
-pheno <- matrices[[2]]
-if (length(matrices) == 3) {
-  covar <- matrices[[3]]
-}
-
-if (! (is.null(arguments$cost) | is.null(arguments$cost_index)) ) {
-  cost_vector <- cost_loading(arguments$cost, arguments$cost_index, colnames(covar))
-}
-
-# rm(matrices)
-
-if (file.exists('./output/curr_gen.GAG')) {
-  source('./output/curr_gen.GAG')
-} else {
-  curr_gen <-
-    generate_G0(n_snps = ncol(snp_df), n_indiv = n_ind, p = mutation_rate)
-}
-
-## Variables declaration ----
-print_params <- 
-  paste0('n_ind = ', n_ind, '\nmu = ', mutation_rate)
-
-all_gen <- vector(mode = 'list', length = n_iter)
-score_list <- vector(mode = 'list', length = n_iter)
-model_list <- vector(mode = 'list', length = n_iter)
-
-
-# Temporary /!\ ----
-# debugSource("~/2023/All_list/SNPs_and_clones/r_function/list_version/calc_score_all_list.R")
-pheno <- as.integer(pheno != "sputum")
 
 ## GA iterator: gen_algo ----
-gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, cost_matrix = NULL, parameters, fitness_fun) {
-  sink("/dev/null")
-  unpacking(parameters)
-  sink()
+gen_algo <- function(snp_matrix, 
+                     pheno_matrix, 
+                     covar_matrix = NULL, 
+                     costs = NULL,
+                     n_gen = 1e2,
+                     n_iter = 1,
+                     n_ind = 1e2,
+                     n_eli = 2,
+                     n_nov = 5,
+                     n_chi = 4,
+                     mu = 1e-3,
+                     cr = 0.5,
+                     curr_gen = NULL,
+                     fitness_fun = decision_tree_fitness) {
+  ## Sourcing functions ----
+  sapply(X = list.files(path = './r_function/GA_functions', 
+         full.names = TRUE), 
+         FUN = source)
   cat("\n", "\n")
+
   
-  for (i in 1:n_iter) {
-    cat('Generation ', count_iter + i, '/', total_iter, '\n')
+  # Variables
+  all_gen <- vector(mode = 'list', length = n_iter)
+  score_list <- vector(mode = 'list', length = n_iter)
+  model_list <- vector(mode = 'list', length = n_iter)
+  
+  if (is.null(covar_matrix)) {
+    covar_matrix <- matrix(data = 1, nrow = nrow(snp_matrix))
+    colnames(covar_matrix) <- 'COVAR_1'
+  }
+  if (is.null(costs)) {
+    costs <- rep(1, (ncol(snp_matrix)+ ncol(covar_matrix)))
+    names(costs) <- c(colnames(snp_matrix), colnames(covar_matrix))
+    costs <- as.matrix(costs)
+  }
+  
+  # Population parameters ----
+  n_top <- 
+    (n_ind / n_chi) - 
+    (n_eli / n_chi) -
+    (n_nov / n_chi)
+  n_top <- ceiling(n_top)
+  
+  n_ind <- (n_top * n_chi) +
+    (n_eli + n_nov) # Total count of individuals
+  
+  # First generation ----
+  if (is.null(curr_gen)) {
+    curr_gen <- generate_G0(n_snps = ncol(snp_matrix), 
+                n_indiv = n_ind, 
+                p = mu)
+  } else if (exists(x = curr_gen)) {
+    #TODO
+    cat('Loading ...')
+    
+  }
+  
+  # All other generations ----
+  count_iter <- 0
+  for (i in 1:n_gen) {
+    cat('Generation ', count_iter + i, '/', n_gen * n_iter, '\n')
     all_gen[[i]] <- 
       sapply(curr_gen, function(x) which(x == 1, arr.ind = TRUE))
-    all_gen[[i]] <- sapply(all_gen[[i]], function(x) colnames(snp_df)[x])
+    all_gen[[i]] <- sapply(all_gen[[i]], function(x) colnames(snp_matrix)[x])
     
     print(summary(sapply(all_gen[[i]], length)))
     
     curr_scores_models <- 
       calc_score(genomes = curr_gen, 
-                 snps = snp_df, 
-                 phenotype = pheno, 
-                 covars = covar,
+                 snps = snp_matrix, 
+                 phenotype = pheno_matrix, 
+                 covars = covar_matrix,
                  fitness = fitness_fun,
-                 costs = cost_matrix,
-                 met = "mcc")
+                 costs = costs,
+                 met = 'loss')
     
     curr_scores <- 
       unlist(lapply(curr_scores_models, function(x) x[[1]]))
@@ -118,43 +94,18 @@ gen_algo <- function(snp_matrix, pheno_matrix, covar_matrix, cost_matrix = NULL,
                     n_child = n_chi, 
                     n_elite = n_eli, 
                     n_novel = n_nov,
-                    mu = mutation_rate, cr = crossing_rate)
+                    mu = mu, cr = cr)
     # print(length(next_gen))
     curr_gen <- next_gen
   }
-  output <- list(all_gen, score_list, model_list, curr_gen)
+  
+  score_df <-
+    data.frame(gen = rep(1:length(score_list), each = n_ind),
+               score = unlist(score_list),
+               n_snps = unlist(sapply(all_gen, FUN = function(x) {
+                 sapply(x, length)}
+                 , simplify = FALSE))
+    )
+  output <- list(all_gen, score_list, model_list, curr_gen, score_df)
   return(output)
-}
-
-output_algo <- gen_algo(snp_df, pheno, covar, cost_vector, params_list, decision_tree_fitness)
-
-
-all_gen <- output_algo[[1]]
-score_list <- output_algo[[2]]
-model_list <- output_algo[[3]]
-curr_gen <- output_algo[[4]]
-
-score_df <-
-  data.frame(gen = rep((count_iter + 1):(count_iter + length(score_list)), each = n_ind),
-             score = unlist(score_list),
-             n_snps = unlist(sapply(all_gen, function(x) {sapply(x, length)},
-                                              simplify = FALSE)))
-
-# out_last_models <- model_list[[length(model_list)]] 
-# rpart.plot::rpart.plot(out_last_models)
-
-
-if (save >= 1) {
-  dump("curr_gen", file = "./output/curr_gen.GAG")
-  write.table(score_df, file ="./output/all_gen_temp", quote = FALSE,
-                      sep = "\t", row.names = FALSE, col.names = FALSE)
-  if (remaining_gen == 0) {
-    print(model_list)
-    save("model_list", file = "./output/toload_lastgen_models.GAG", version = 3)
-    # Version 3 supported by 3.5.0+ versions of R
-  }
-  if (save >= 2) {
-    save("all_gen", file = "./output/all_gen_list.GAG", version = 3)
-    # Version 3 supported by 3.5.0+ versions of R  
-  }
 }
